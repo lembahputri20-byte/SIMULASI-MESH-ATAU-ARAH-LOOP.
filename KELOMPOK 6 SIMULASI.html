@@ -1,0 +1,3411 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi Interaktif Analisis Mesh &amp; Supermesh</title>
+    <style>
+        /* Variabel Tema Warna Default (Biru Klasik) */
+        :root {
+            --bg-page: #f1f5f9;
+            --bg-card: #ffffff;
+            --bg-subtle: #f8fafc;
+            --border-color: #cbd5e1;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-soft: #eff6ff;
+            --emerald: #059669;
+            --emerald-soft: #ecfdf5;
+            --amber: #d97706;
+            --amber-soft: #fffbeb;
+            --rose: #e11d48;
+            --rose-soft: #fff1f2;
+            --canvas-bg: #ffffff;
+            --wire-color: #1e293b;
+            --grid-dot: #cbd5e1;
+            --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
+            --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+        }
+
+        /* Tema Hijau Zamrud */
+        [data-theme="emerald"] {
+            --bg-page: #ecfdf5;
+            --bg-card: #ffffff;
+            --bg-subtle: #f0fdf4;
+            --border-color: #a7f3d0;
+            --text-main: #064e3b;
+            --text-muted: #047857;
+            --primary: #059669;
+            --primary-hover: #047857;
+            --primary-soft: #d1fae5;
+            --wire-color: #064e3b;
+        }
+
+        /* Tema Ungu Akademik */
+        [data-theme="purple"] {
+            --bg-page: #f5f3ff;
+            --bg-card: #ffffff;
+            --bg-subtle: #faf5ff;
+            --border-color: #ddd6fe;
+            --text-main: #2e1065;
+            --text-muted: #5b21b6;
+            --primary: #7c3aed;
+            --primary-hover: #6d28d9;
+            --primary-soft: #ede9fe;
+            --wire-color: #2e1065;
+        }
+
+        /* Tema Terakota Oranye */
+        [data-theme="terracotta"] {
+            --bg-page: #fff7ed;
+            --bg-card: #ffffff;
+            --bg-subtle: #fffaf5;
+            --border-color: #fed7aa;
+            --text-main: #431407;
+            --text-muted: #9a3412;
+            --primary: #ea580c;
+            --primary-hover: #c2410c;
+            --primary-soft: #ffedd5;
+            --wire-color: #431407;
+        }
+
+        /* Tema Mode Gelap */
+        [data-theme="dark"] {
+            --bg-page: #0f172a;
+            --bg-card: #1e293b;
+            --bg-subtle: #0f172a;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #38bdf8;
+            --primary-hover: #0284c7;
+            --primary-soft: #0c4a6e;
+            --emerald: #34d399;
+            --emerald-soft: #064e3b;
+            --amber: #fbbf24;
+            --amber-soft: #451a03;
+            --rose: #fb7185;
+            --rose-soft: #4c0519;
+            --canvas-bg: #0b1120;
+            --wire-color: #e2e8f0;
+            --grid-dot: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.5;
+            transition: background-color 0.2s, color 0.2s;
+            overflow-x: hidden;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 14px 20px;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 30;
+        }
+
+        .header-inner {
+            max-width: 1460px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--primary);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .brand h1 {
+            font-size: 1.06rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .brand p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .theme-bar {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            flex-wrap: wrap;
+        }
+
+        .theme-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 11px;
+            border-radius: 999px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-subtle);
+            color: var(--text-main);
+            font-size: 0.73rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .theme-btn:hover {
+            border-color: var(--primary);
+        }
+
+        .theme-btn.active {
+            background: var(--primary-soft);
+            border-color: var(--primary);
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .swatch {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Layout Utama */
+        main {
+            max-width: 1460px;
+            margin: 16px auto;
+            padding: 0 16px 32px;
+            display: grid;
+            grid-template-columns: 1.25fr 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+
+        @media (max-width: 1100px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .col-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 11px 16px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-subtle);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .accent-bar {
+            width: 4px;
+            height: 18px;
+            border-radius: 4px;
+            background: var(--primary);
+            display: inline-block;
+        }
+
+        .card-body {
+            padding: 14px 16px;
+        }
+
+        /* Tombol & Segmented Controls */
+        button {
+            font-family: inherit;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-main);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        button:hover {
+            border-color: var(--primary);
+            background: var(--primary-soft);
+        }
+
+        button.btn-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+        }
+
+        button.btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        button.btn-amber {
+            background: var(--amber-soft);
+            border-color: var(--amber);
+            color: var(--amber);
+        }
+
+        button.btn-emerald {
+            background: var(--emerald-soft);
+            border-color: var(--emerald);
+            color: var(--emerald);
+        }
+
+        button.btn-danger {
+            background: var(--rose-soft);
+            border-color: var(--rose);
+            color: var(--rose);
+        }
+
+        .seg-toggle {
+            display: inline-flex;
+            background: var(--bg-page);
+            border: 1px solid var(--border-color);
+            border-radius: 9px;
+            padding: 2px;
+            gap: 2px;
+        }
+
+        .seg-toggle button {
+            border: none;
+            background: transparent;
+            padding: 5px 10px;
+            border-radius: 7px;
+            font-size: 0.74rem;
+        }
+
+        .seg-toggle button.active {
+            background: var(--primary);
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        /* Toolbar Atas Kanvas */
+        .toolbar-row {
+            padding: 9px 16px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-card);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .toolbar-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Pembungkus Kanvas Eksplisit Anti Layar Putih / Gambar Kosong */
+        .canvas-wrapper {
+            position: relative;
+            width: 100%;
+            min-height: 400px;
+            height: 400px;
+            display: block;
+            background: var(--canvas-bg);
+            border-bottom: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        canvas#circuitCanvas {
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
+            display: block;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        /* Kotak Error Diagnostik */
+        #errorBox {
+            display: none;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #f87171;
+            padding: 12px 16px;
+            margin: 12px 16px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* Popover Edit Komponen pada Mode Rakit */
+        #builderEditorModal {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 245px;
+            background: var(--bg-card);
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.22);
+            z-index: 20;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Kontrol Partikel */
+        .particle-bar {
+            padding: 10px 16px;
+            background: var(--bg-subtle);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            font-size: 0.77rem;
+        }
+
+        .slider-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        input[type="range"] {
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        /* Grid Kontrol Cabang Template */
+        .branch-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+        }
+
+        .branch-card {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 11px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .branch-card h4 {
+            font-size: 0.79rem;
+            font-weight: 800;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .field-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            font-size: 0.73rem;
+        }
+
+        .field-row label {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        select, input[type="number"], input[type="text"] {
+            font-family: inherit;
+            font-size: 0.74rem;
+            padding: 4px 7px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-main);
+        }
+
+        input[type="number"] {
+            width: 72px;
+            text-align: right;
+        }
+
+        .top-r-bar {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed var(--border-color);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Panel Kanan: Kartu Hasil & Langkah Matematis */
+        .status-banner {
+            padding: 9px 12px;
+            border-radius: 9px;
+            font-size: 0.77rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            background: var(--primary-soft);
+            border: 1px solid var(--primary);
+            color: var(--text-main);
+        }
+
+        .status-banner.supermesh {
+            background: var(--amber-soft);
+            border-color: var(--amber);
+        }
+
+        .status-banner.error {
+            background: var(--rose-soft);
+            border-color: var(--rose);
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .res-pill {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .res-pill .lbl {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .res-pill .val {
+            font-size: 1.12rem;
+            font-weight: 800;
+            margin: 2px 0;
+        }
+
+        .res-pill .dir {
+            font-size: 0.69rem;
+            color: var(--text-muted);
+        }
+
+        .step-card {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .step-title {
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .step-sub {
+            font-size: 0.73rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .eq-box {
+            background: var(--bg-card);
+            border-left: 3px solid var(--primary);
+            border-top: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 7px 10px;
+            margin-bottom: 6px;
+            font-size: 0.76rem;
+            overflow-x: auto;
+        }
+
+        .eq-box.amber {
+            border-left-color: var(--amber);
+        }
+
+        .eq-box.emerald {
+            border-left-color: var(--emerald);
+        }
+
+        .matrix-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 8px 0;
+        }
+
+        .matrix-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 0.73rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.74rem;
+        }
+
+        th, td {
+            padding: 7px 8px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        th {
+            background: var(--bg-page);
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .minus-banner {
+            margin-top: 10px;
+            padding: 9px 12px;
+            border-radius: 8px;
+            background: var(--rose-soft);
+            border: 1px solid var(--rose);
+            font-size: 0.74rem;
+            color: var(--text-main);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-inner">
+            <div class="brand">
+                <div class="brand-logo">⚡</div>
+                <div>
+                    <h1>Simulasi Interaktif Analisis Mesh &amp; Supermesh</h1>
+                    <p>Mode Template (2 &amp; 3 Mesh), Mode Rakit Sendiri (Grid), Aturan Cramer &amp; Substitusi</p>
+                </div>
+            </div>
+
+            <!-- 5 Pilihan Tema Warna -->
+            <div class="theme-bar" id="themeBar">
+                <span style="font-size:0.74rem;font-weight:700;color:var(--text-muted);">Tema Warna:</span>
+                <button type="button" class="theme-btn active" data-theme="classic"><span class="swatch" style="background:#2563eb;"></span>Biru Klasik</button>
+                <button type="button" class="theme-btn" data-theme="emerald"><span class="swatch" style="background:#059669;"></span>Hijau Zamrud</button>
+                <button type="button" class="theme-btn" data-theme="purple"><span class="swatch" style="background:#7c3aed;"></span>Ungu Akademik</button>
+                <button type="button" class="theme-btn" data-theme="terracotta"><span class="swatch" style="background:#ea580c;"></span>Terakota Oranye</button>
+                <button type="button" class="theme-btn" data-theme="dark"><span class="swatch" style="background:#0f172a;"></span>Mode Gelap</button>
+            </div>
+        </div>
+    </header>
+
+    <div id="errorBox"></div>
+
+    <main>
+        <!-- KOLOM KIRI: KANVAS DIAGRAM & KONTROL RANGKAIAN -->
+        <div class="col-stack">
+            <div class="card">
+                <!-- Bar Pemilih Mode Utama & Sakelar Sembunyi/Tampil -->
+                <div class="card-header">
+                    <div class="seg-toggle">
+                        <button type="button" id="btnModeTemplate" class="active">📐 Mode Template (2 / 3 Mesh)</button>
+                        <button type="button" id="btnModeBuilder">🔧 Mode Rakit Sendiri (Grid)</button>
+                    </div>
+
+                    <div class="toolbar-group">
+                        <button type="button" id="btnToggleCurrents" class="btn-primary" title="Tampilkan atau sembunyikan nilai arus (A)">👁️ Nilai Arus: Tampil</button>
+                        <button type="button" id="btnToggleMath" class="btn-primary" title="Tampilkan atau sembunyikan langkah perhitungan">📐 Perhitungan: Tampil</button>
+                    </div>
+                </div>
+
+                <!-- Sub-toolbar Mode Template -->
+                <div id="templateToolbar" class="toolbar-row">
+                    <div class="toolbar-group">
+                        <span style="font-size:0.74rem;font-weight:700;color:var(--text-muted);">Jumlah Mesh:</span>
+                        <div class="seg-toggle">
+                            <button type="button" id="btn2Mesh" class="active">2 Mesh</button>
+                            <button type="button" id="btn3Mesh">3 Mesh</button>
+                        </div>
+                    </div>
+
+                    <div class="toolbar-group">
+                        <button type="button" id="preMeshBiasa" class="btn-primary">Mesh Biasa</button>
+                        <button type="button" id="preSupermesh" class="btn-amber">Supermesh Tengah</button>
+                        <button type="button" id="preOuterIs">Sumber Arus Cabang Luar</button>
+                        <button type="button" id="pre3MeshMode" class="btn-emerald">Mode 3 Mesh</button>
+                    </div>
+                </div>
+
+                <!-- Sub-toolbar Mode Rakit Sendiri (Grid) -->
+                <div id="builderToolbar" class="toolbar-row hidden">
+                    <div class="toolbar-group">
+                        <button type="button" class="tool-btn btn-primary" data-tool="select">👆 Pilih/Edit</button>
+                        <button type="button" class="tool-btn" data-tool="R">〰️ Resistor</button>
+                        <button type="button" class="tool-btn" data-tool="V">🔋 Sumber V</button>
+                        <button type="button" class="tool-btn" data-tool="I">⬆️ Sumber Is</button>
+                        <button type="button" class="tool-btn" data-tool="W">➖ Kabel</button>
+                        <button type="button" class="tool-btn btn-danger" data-tool="delete">🗑️ Hapus</button>
+                    </div>
+
+                    <div class="toolbar-group">
+                        <button type="button" id="btnBldEx2">Contoh 2 Mesh</button>
+                        <button type="button" id="btnBldExSuper">Contoh Supermesh</button>
+                        <button type="button" id="btnBldClear">Bersihkan</button>
+                    </div>
+                </div>
+
+                <!-- Panel Simpan, Muat, & Ekspor File Lengkap -->
+                <div class="toolbar-row" style="background:var(--bg-subtle);">
+                    <div class="toolbar-group" style="flex:1;min-width:230px;">
+                        <span style="font-size:0.74rem;font-weight:700;color:var(--text-muted);">💾 Nama Berkas:</span>
+                        <input type="text" id="savePresetName" placeholder="Contoh: Tugas_Supermesh_1" style="min-width:165px;flex:1;">
+                        <button type="button" id="btnSaveBrowser" title="Simpan cepat ke penyimpanan browser">Simpan Browser</button>
+                    </div>
+
+                    <div class="toolbar-group">
+                        <select id="savedPresetsSelect" style="max-width:170px;" title="Daftar rangkaian tersimpan di browser">
+                            <option value="">-- Tersimpan (0) --</option>
+                        </select>
+                        <button type="button" id="btnLoadBrowser" class="btn-emerald">Muat</button>
+                        <button type="button" id="btnDeleteBrowser" class="btn-danger">Hapus</button>
+                    </div>
+                </div>
+
+                <div class="toolbar-row" style="background:var(--bg-card);">
+                    <div class="toolbar-group">
+                        <span style="font-size:0.73rem;font-weight:700;color:var(--text-muted);">Ekspor &amp; Impor File:</span>
+                        <button type="button" id="btnExportHTML" class="btn-primary" title="Unduh satu file HTML mandiri berisi simulasi + rangkaian Anda">💾 Simpan Simulasi (.html)</button>
+                        <button type="button" id="btnExportDOC" class="btn-emerald" title="Unduh laporan perhitungan lengkap untuk Microsoft Word">📄 Simpan Laporan (.doc)</button>
+                        <button type="button" id="btnExportJSON" title="Ekspor file data proyek JSON">📦 Proyek (.json)</button>
+                        <button type="button" id="btnImportJSON" title="Buka file data proyek JSON">📂 Buka (.json)</button>
+                        <input type="file" id="importJsonInput" accept=".json,application/json" class="hidden">
+                        <button type="button" id="btnExportPNG" class="btn-amber" title="Unduh gambar diagram rangkaian PNG">🖼️ Gambar (.png)</button>
+                    </div>
+                </div>
+
+                <!-- Notifikasi Status Simpan / Muat -->
+                <div id="storageToast" class="hidden" style="padding:7px 16px;background:var(--emerald-soft);color:var(--emerald);border-bottom:1px solid var(--emerald);font-size:0.75rem;font-weight:700;"></div>
+
+                <!-- Area Kanvas Diagram Rangkaian -->
+                <div class="canvas-wrapper" id="canvasWrapper">
+                    <canvas id="circuitCanvas" width="720" height="400"></canvas>
+
+                    <!-- Modal Editor Elemen Mode Rakit Sendiri -->
+                    <div id="builderEditorModal" class="hidden">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                            <strong style="font-size:0.8rem;color:var(--primary);" id="bldEditTitle">Edit Komponen</strong>
+                            <button type="button" id="btnBldCloseModal" style="padding:2px 7px;font-size:0.7rem;">✕</button>
+                        </div>
+                        <div class="field-row" style="margin-bottom:8px;">
+                            <label id="bldEditValLabel">Nilai:</label>
+                            <input type="number" id="bldEditValue" step="0.5" min="0.1" value="5">
+                        </div>
+                        <div class="field-row" style="margin-bottom:10px;" id="bldEditPolRow">
+                            <label>Arah / Polaritas:</label>
+                            <button type="button" id="btnBldFlipPol" style="padding:4px 8px;">🔄 Balik Arah</button>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;gap:6px;">
+                            <button type="button" id="btnBldDeleteEdge" class="btn-danger" style="flex:1;">Hapus</button>
+                            <button type="button" id="btnBldSaveEdge" class="btn-primary" style="flex:1;">Terapkan</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bar Kontrol Kecepatan & Arah Partikel -->
+                <div class="particle-bar">
+                    <div class="slider-box">
+                        <label for="speedSlider" style="font-weight:700;">Kecepatan Partikel:</label>
+                        <input type="range" id="speedSlider" min="0" max="3" step="0.1" value="1.0">
+                        <span id="speedValLabel" class="mono" style="font-weight:800;color:var(--primary);min-width:74px;">1.0x</span>
+                    </div>
+
+                    <div class="slider-box">
+                        <span style="font-weight:700;">Arah Partikel:</span>
+                        <div class="seg-toggle">
+                            <button type="button" id="btnFlowConv" class="active">Arus Konvensional (+ &rarr; &minus;)</button>
+                            <button type="button" id="btnFlowElec">Aliran Elektron (&minus; &rarr; +)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel Kustomisasi Komponen (Khusus Mode Template) -->
+            <div class="card" id="templateConfigCard">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="accent-bar"></span>
+                        <span>Pengaturan Komponen &amp; Arah Loop (Mode Template)</span>
+                    </div>
+                    <div class="toolbar-group" id="loopDirControls"></div>
+                </div>
+                <div class="card-body">
+                    <div class="branch-grid" id="branchControlsGrid"></div>
+                    <div class="top-r-bar" id="topResistorControls"></div>
+                </div>
+            </div>
+
+            <!-- Panduan Singkat Mode Rakit Sendiri -->
+            <div class="card hidden" id="builderHelpCard">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="accent-bar" style="background:var(--amber);"></span>
+                        <span>Panduan Mode Rakit Sendiri (Grid Drag &amp; Drop)</span>
+                    </div>
+                    <div class="toolbar-group" id="builderLoopControls"></div>
+                </div>
+                <div class="card-body" style="font-size:0.78rem;color:var(--text-muted);">
+                    <p style="margin-bottom:6px;"><strong>1. Pasang Komponen:</strong> Pilih alat di atas kanvas (<em>Resistor, Sumber V, Sumber Is, atau Kabel</em>), lalu klik dan seret (<em>drag</em>) dari satu titik simpul grid ke titik sebelahnya.</p>
+                    <p style="margin-bottom:6px;"><strong>2. Edit Nilai &amp; Polaritas:</strong> Gunakan alat <em>Pilih/Edit</em> lalu klik komponen pada kanvas untuk mengubah nilainya atau membalik arah sumber.</p>
+                    <p><strong>3. Deteksi Otomatis:</strong> Sistem otomatis mendeteksi seluruh loop tertutup (Mesh), membentuk lintasan <strong>Supermesh</strong> jika sumber arus dipasang di perbatasan antar-mesh, dan menyusun persamaan KVL/KCL-nya.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- KOLOM KANAN: HASIL ARUS & PERHITUNGAN MATEMATIS -->
+        <div class="col-stack">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="accent-bar" style="background:var(--emerald);"></span>
+                        <span>Hasil Analisis &amp; Perhitungan Matematis</span>
+                    </div>
+                    <div class="toolbar-group">
+                        <button type="button" id="btnToggleCurrentsCard" class="btn-primary" style="padding:4px 8px;font-size:0.71rem;">👁️ Sembunyikan Arus</button>
+                        <div class="seg-toggle" id="methodToggleGroup">
+                            <button type="button" id="btnMethodCramer" class="active">Aturan Cramer</button>
+                            <button type="button" id="btnMethodSubst">Metode Substitusi</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="statusBanner" class="status-banner">Memuat analisis rangkaian...</div>
+                    <div id="resultCardsContainer" class="result-grid"></div>
+                    <div id="mathStepsContainer"></div>
+                    <div id="tableContainer"></div>
+                    <div id="minusBanner" class="minus-banner hidden">
+                        <strong>ℹ️ Catatan Tanda Negatif (&minus;):</strong> Nilai arus bertanda negatif menandakan arah arus fisik sebenarnya mengalir <strong>berlawanan</strong> dengan panah asumsi loop (CW/CCW) yang dipilih.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script id="app-source">
+        (function () {
+            'use strict';
+
+            // Fungsi pembantu menggambar kotak bersudut tumpul yang kompatibel di semua browser
+            function drawRoundedRect(ctx, x, y, width, height, radius) {
+                const r = Math.min(radius, width / 2, height / 2);
+                ctx.beginPath();
+                ctx.moveTo(x + r, y);
+                ctx.lineTo(x + width - r, y);
+                ctx.arcTo(x + width, y, x + width, y + r, r);
+                ctx.lineTo(x + width, y + height - r);
+                ctx.arcTo(x + width, y + height, x + width - r, y + height, r);
+                ctx.lineTo(x + r, y + height);
+                ctx.arcTo(x, y + height, x, y + height - r, r);
+                ctx.lineTo(x, y + r);
+                ctx.arcTo(x, y, x + r, y, r);
+                ctx.closePath();
+            }
+
+            // Format angka rapi
+            function fmt(num, dec) {
+                if (typeof dec === 'undefined') dec = 2;
+                if (!isFinite(num) || isNaN(num)) return '0';
+                const clean = Math.abs(num) < 1e-9 ? 0 : num;
+                return Number(clean.toFixed(dec)).toString();
+            }
+
+            function fmtSigned(num, dec) {
+                const v = Math.abs(num) < 1e-9 ? 0 : num;
+                const s = fmt(Math.abs(v), dec);
+                return v >= 0 ? `+ ${s}` : `- ${s}`;
+            }
+
+            // State Utama Aplikasi
+            const state = {
+                mode: 'template',          // 'template' atau 'builder'
+                theme: 'classic',
+                meshCount: 2,              // 2 atau 3
+                calcMethod: 'cramer',      // 'cramer' atau 'substitution'
+                showCurrentValues: true,   // Sakelar Tampil / Sembunyi Nilai Arus
+                showCalculations: true,    // Sakelar Tampil / Sembunyi Perhitungan
+                particleSpeed: 1.0,        // 0.0 .. 3.0
+                flowMode: 'conventional',  // 'conventional' atau 'electron'
+                particlePhase: 0,
+
+                // State Mode Template
+                loopDirs: [1, 1, 1],       // 1 = CW, -1 = CCW
+                topR: [6, 8, 5],           // R1 (Mesh 1), R2 (Mesh 2), R4 (Mesh 3)
+                branches: [
+                    { id: 'b0', label: 'Cabang Kiri', kind: 'V', r: 2, v: 24, vPol: 1, i: 2.0, iDir: 1 },
+                    { id: 'b1', label: 'Cabang Tengah 1', kind: 'R', r: 4, v: 6, vPol: 1, i: 1.5, iDir: 1 },
+                    { id: 'b2', label: 'Cabang Tengah 2', kind: 'R', r: 5, v: 6, vPol: 1, i: 1.0, iDir: 1 },
+                    { id: 'b3', label: 'Cabang Kanan', kind: 'V', r: 3, v: 12, vPol: 1, i: 1.5, iDir: 1 }
+                ],
+
+                // State Mode Rakit Sendiri (Grid 5 kolom x 3 baris)
+                builder: {
+                    cols: 5,
+                    rows: 3,
+                    tool: 'select',
+                    edges: [],
+                    loopDirs: {},
+                    selectedEdgeId: null,
+                    dragStart: null,
+                    dragCurrent: null
+                }
+            };
+
+            let lastTemplateSol = null;
+            let lastBuilderSol = null;
+            let animFrameId = null;
+
+            function showError(msg) {
+                const box = document.getElementById('errorBox');
+                if (box) {
+                    box.style.display = 'block';
+                    box.textContent = 'Terjadi kendala pada simulasi: ' + msg;
+                }
+            }
+
+            // =========================================================================
+            // SOLVER MATEMATIKA MODE TEMPLATE (2 MESH & 3 MESH + SUPERMESH)
+            // =========================================================================
+            function branchHasCurrentSource(b) {
+                return b.kind === 'I' || b.kind === 'RI';
+            }
+
+            function branchEffectiveR(b) {
+                if (b.kind === 'R' || b.kind === 'RV' || b.kind === 'RI') return Math.max(0, Number(b.r) || 0);
+                return 0;
+            }
+
+            // Tegangan sumber naik (+ di atas) pada cabang
+            function branchSourceRiseV(b) {
+                if (b.kind === 'V' || b.kind === 'RV') return (Number(b.v) || 0) * (b.vPol || 1);
+                return 0;
+            }
+
+            // Arus sumber ke atas (+ ke atas) pada cabang
+            function branchSourceUpI(b) {
+                if (branchHasCurrentSource(b)) return (Number(b.i) || 0) * (b.iDir || 1);
+                return 0;
+            }
+
+            function solveLinearSystem(A, B) {
+                const n = B.length;
+                const M = A.map((row, idx) => row.slice().concat([B[idx]]));
+                for (let col = 0; col < n; col++) {
+                    let pivot = col;
+                    for (let r = col + 1; r < n; r++) {
+                        if (Math.abs(M[r][col]) > Math.abs(M[pivot][col])) pivot = r;
+                    }
+                    if (Math.abs(M[pivot][col]) < 1e-10) return null;
+                    const tmp = M[col];
+                    M[col] = M[pivot];
+                    M[pivot] = tmp;
+
+                    for (let r = col + 1; r < n; r++) {
+                        const factor = M[r][col] / M[col][col];
+                        for (let c = col; c <= n; c++) {
+                            M[r][c] -= factor * M[col][c];
+                        }
+                    }
+                }
+                const x = new Array(n).fill(0);
+                for (let r = n - 1; r >= 0; r--) {
+                    let sum = M[r][n];
+                    for (let c = r + 1; c < n; c++) {
+                        sum -= M[r][c] * x[c];
+                    }
+                    x[r] = sum / M[r][r];
+                }
+                return x;
+            }
+
+            function det2(m) {
+                return m[0][0] * m[1][1] - m[0][1] * m[1][0];
+            }
+
+            function det3(m) {
+                return (
+                    m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) -
+                    m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) +
+                    m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0])
+                );
+            }
+
+            function determinant(mat) {
+                if (mat.length === 1) return mat[0][0];
+                if (mat.length === 2) return det2(mat);
+                if (mat.length === 3) return det3(mat);
+                return 0;
+            }
+
+            function solveTemplateCircuit() {
+                const N = state.meshCount;
+                const activeBranches = N === 2
+                    ? [state.branches[0], state.branches[1], state.branches[3]]
+                    : [state.branches[0], state.branches[1], state.branches[2], state.branches[3]];
+
+                // Penyeimbang otomatis jika SEMUA cabang vertikal adalah sumber arus agar KCL node atas terpenuhi
+                let autoBalancedNote = '';
+                if (activeBranches.every(branchHasCurrentSource)) {
+                    let sumOthersUp = 0;
+                    for (let k = 0; k < activeBranches.length - 1; k++) {
+                        sumOthersUp += branchSourceUpI(activeBranches[k]);
+                    }
+                    const lastB = activeBranches[activeBranches.length - 1];
+                    const neededUp = -sumOthersUp;
+                    lastB.iDir = neededUp >= 0 ? 1 : -1;
+                    lastB.i = Math.max(0, Number(Math.abs(neededUp).toFixed(2)));
+                    autoBalancedNote = `Seluruh cabang vertikal berisi sumber arus; nilai ${lastB.label} otomatis diselaraskan menjadi ${fmt(lastB.i, 2)} A agar memenuhi KCL node atas (∑I = 0).`;
+                }
+
+                const d = state.loopDirs;
+                const branchCoef = [];
+                branchCoef.push(N === 2 ? [-d[0], 0] : [-d[0], 0, 0]);
+                branchCoef.push(N === 2 ? [d[0], -d[1]] : [d[0], -d[1], 0]);
+                if (N === 3) {
+                    branchCoef.push([0, d[1], -d[2]]);
+                }
+                branchCoef.push(N === 2 ? [0, d[1]] : [0, 0, d[2]]);
+
+                const meshKVL_A = [];
+                const meshKVL_B = [];
+
+                for (let m = 0; m < N; m++) {
+                    const leftB = activeBranches[m];
+                    const rightB = activeBranches[m + 1];
+
+                    const row = new Array(N).fill(0);
+                    row[m] += Number(state.topR[m]) || 0;
+
+                    const rLeft = branchEffectiveR(leftB);
+                    const rRight = branchEffectiveR(rightB);
+                    for (let j = 0; j < N; j++) {
+                        row[j] += d[m] * (rRight * branchCoef[m + 1][j] - rLeft * branchCoef[m][j]);
+                    }
+
+                    const rhs = d[m] * (branchSourceRiseV(leftB) - branchSourceRiseV(rightB));
+                    meshKVL_A.push(row);
+                    meshKVL_B.push(rhs);
+                }
+
+                // Kelompokkan mesh yang terhubung oleh sumber arus di cabang tengah menjadi Supermesh
+                const visited = new Array(N).fill(false);
+                const superGroups = [];
+                for (let m = 0; m < N; m++) {
+                    if (!visited[m]) {
+                        const grp = [];
+                        let cur = m;
+                        while (cur < N) {
+                            visited[cur] = true;
+                            grp.push(cur);
+                            if (cur + 1 < N && branchHasCurrentSource(activeBranches[cur + 1])) {
+                                cur++;
+                            } else {
+                                break;
+                            }
+                        }
+                        superGroups.push(grp);
+                    }
+                }
+
+                const eqRowsA = [];
+                const eqRowsB = [];
+                const eqDescriptions = [];
+                const supermeshLinks = [];
+
+                for (let k = 1; k < N; k++) {
+                    if (branchHasCurrentSource(activeBranches[k])) {
+                        supermeshLinks.push(k);
+                    }
+                }
+
+                // 1. Persamaan kendala KCL untuk setiap cabang bersumber arus
+                for (let k = 0; k <= N; k++) {
+                    const b = activeBranches[k];
+                    if (branchHasCurrentSource(b)) {
+                        const row = branchCoef[k].slice();
+                        const rhs = -branchSourceUpI(b);
+                        eqRowsA.push(row);
+                        eqRowsB.push(rhs);
+
+                        const lhsText = formatLinearExpr(row);
+                        eqDescriptions.push({
+                            type: 'kcl',
+                            label: `Persamaan Kendala KCL (${b.label})`,
+                            text: `${lhsText} = ${fmt(rhs, 3)} A`
+                        });
+                    }
+                }
+
+                // 2. Persamaan KVL untuk setiap kelompok mesh / supermesh
+                for (const grp of superGroups) {
+                    const touchesOuterCurrent =
+                        branchHasCurrentSource(activeBranches[grp[0]]) ||
+                        branchHasCurrentSource(activeBranches[grp[grp.length - 1] + 1]);
+
+                    if (!touchesOuterCurrent) {
+                        const row = new Array(N).fill(0);
+                        let rhs = 0;
+                        for (const m of grp) {
+                            for (let j = 0; j < N; j++) row[j] += meshKVL_A[m][j];
+                            rhs += meshKVL_B[m];
+                        }
+                        eqRowsA.push(row);
+                        eqRowsB.push(rhs);
+
+                        const isSuper = grp.length > 1;
+                        const label = isSuper
+                            ? `KVL Supermesh (Gabungan ${grp.map(m => 'Mesh ' + (m + 1)).join(' + ')})`
+                            : `KVL Mesh ${grp[0] + 1}`;
+                        eqDescriptions.push({
+                            type: isSuper ? 'supermesh' : 'kvl',
+                            label: label,
+                            text: `${formatLinearExpr(row)} = ${fmt(rhs, 2)} V`
+                        });
+                    }
+                }
+
+                if (eqRowsA.length !== N) {
+                    return {
+                        valid: false,
+                        N: N,
+                        error: 'Sistem persamaan tidak seimbang (jumlah persamaan tidak sama dengan jumlah mesh).'
+                    };
+                }
+
+                const currents = solveLinearSystem(eqRowsA, eqRowsB);
+                if (!currents) {
+                    return {
+                        valid: false,
+                        N: N,
+                        error: 'Determinan matriks utama = 0 (rangkaian hubung singkat tanpa hambatan).'
+                    };
+                }
+
+                const branchFlows = {
+                    top1: d[0] * currents[0],
+                    top2: d[1] * currents[1],
+                    top3: N === 3 ? d[2] * currents[2] : 0,
+                    leftUp: -(branchCoef[0][0] * currents[0] + branchCoef[0][1] * currents[1] + (N === 3 ? branchCoef[0][2] * currents[2] : 0)),
+                    mid12Down: branchCoef[1][0] * currents[0] + branchCoef[1][1] * currents[1] + (N === 3 ? branchCoef[1][2] * currents[2] : 0),
+                    mid23Down: N === 3 ? (branchCoef[2][0] * currents[0] + branchCoef[2][1] * currents[1] + branchCoef[2][2] * currents[2]) : 0,
+                    rightDown: branchCoef[N][0] * currents[0] + branchCoef[N][1] * currents[1] + (N === 3 ? branchCoef[N][2] * currents[2] : 0)
+                };
+
+                return {
+                    valid: true,
+                    N: N,
+                    A: eqRowsA,
+                    B: eqRowsB,
+                    currents: currents,
+                    eqDescriptions: eqDescriptions,
+                    supermeshLinks: supermeshLinks,
+                    isSupermesh: supermeshLinks.length > 0,
+                    autoBalancedNote: autoBalancedNote,
+                    branchFlows: branchFlows,
+                    activeBranches: activeBranches
+                };
+            }
+
+            function formatLinearExpr(coefs) {
+                const parts = [];
+                coefs.forEach((c, idx) => {
+                    if (Math.abs(c) < 1e-8) return;
+                    const absC = Math.abs(c);
+                    const coefStr = Math.abs(absC - 1) < 1e-8 ? '' : fmt(absC, 2);
+                    const term = `${coefStr}I<sub>${idx + 1}</sub>`;
+                    if (parts.length === 0) {
+                        parts.push(c < 0 ? `-${term}` : term);
+                    } else {
+                        parts.push(c < 0 ? `- ${term}` : `+ ${term}`);
+                    }
+                });
+                return parts.length > 0 ? parts.join(' ') : '0';
+            }
+
+            function calcBranchVoltage(b, absI) {
+                const vR = absI * branchEffectiveR(b);
+                const vS = Math.abs(branchSourceRiseV(b));
+                if (b.kind === 'R') return vR;
+                if (b.kind === 'V') return vS;
+                if (b.kind === 'RV') return Math.abs(vS - vR);
+                return vR;
+            }
+
+            // =========================================================================
+            // SOLVER & DETEKSI LOOP OTOMATIS MODE RAKIT SENDIRI (GRID MNA)
+            // =========================================================================
+            function loadBuilderPreset(type) {
+                const b = state.builder;
+                b.edges = [];
+                b.loopDirs = {};
+                b.selectedEdgeId = null;
+
+                let idCounter = 1;
+                const add = (c1, r1, c2, r2, t, val, pol) => {
+                    b.edges.push({
+                        id: 'e' + (idCounter++),
+                        c1: c1, r1: r1, c2: c2, r2: r2,
+                        type: t, value: val, pol: pol || 1
+                    });
+                };
+
+                if (type === '2mesh') {
+                    add(1, 2, 1, 0, 'V', 20, 1);
+                    add(1, 0, 2, 0, 'R', 5, 1);
+                    add(2, 0, 2, 2, 'R', 4, 1);
+                    add(2, 2, 1, 2, 'W', 0, 1);
+
+                    add(2, 0, 3, 0, 'R', 8, 1);
+                    add(3, 0, 3, 2, 'V', 12, 1);
+                    add(3, 2, 2, 2, 'W', 0, 1);
+                } else if (type === 'supermesh') {
+                    add(1, 2, 1, 0, 'V', 24, 1);
+                    add(1, 0, 2, 0, 'R', 6, 1);
+                    add(2, 0, 2, 2, 'I', 2, -1); // 2A ke atas (dari r=2 ke r=0)
+                    add(2, 2, 1, 2, 'W', 0, 1);
+
+                    add(2, 0, 3, 0, 'R', 4, 1);
+                    add(3, 0, 3, 2, 'V', 10, 1);
+                    add(3, 2, 2, 2, 'W', 0, 1);
+                }
+            }
+
+            function solveBuilderCircuit() {
+                const b = state.builder;
+                if (b.edges.length === 0) {
+                    return { valid: false, error: 'Kanvas masih kosong. Tarik komponen antar-titik grid atau pilih contoh rangkaian.' };
+                }
+
+                const nodeMap = new Map();
+                const nodeKey = (c, r) => `${c},${r}`;
+                b.edges.forEach(e => {
+                    nodeMap.set(nodeKey(e.c1, e.r1), { c: e.c1, r: e.r1 });
+                    nodeMap.set(nodeKey(e.c2, e.r2), { c: e.c2, r: e.r2 });
+                });
+
+                const nodes = Array.from(nodeMap.keys());
+                if (nodes.length < 2) {
+                    return { valid: false, error: 'Rangkaian belum membentuk lintasan tertutup.' };
+                }
+
+                const hasEdgeBetween = (c1, r1, c2, r2) => {
+                    return b.edges.find(e =>
+                        (e.c1 === c1 && e.r1 === r1 && e.c2 === c2 && e.r2 === r2) ||
+                        (e.c1 === c2 && e.r1 === r2 && e.c2 === c1 && e.r2 === r1)
+                    );
+                };
+
+                // Deteksi loop persegi tertutup pada grid sebagai Mesh Fundamental
+                const faces = [];
+                for (let c = 0; c < b.cols - 1; c++) {
+                    const topE = hasEdgeBetween(c, 0, c + 1, 0);
+                    const botE = hasEdgeBetween(c, 2, c + 1, 2);
+                    const midH = hasEdgeBetween(c, 1, c + 1, 1);
+                    const lTop = hasEdgeBetween(c, 0, c, 1);
+                    const lBot = hasEdgeBetween(c, 1, c, 2);
+                    const rTop = hasEdgeBetween(c + 1, 0, c + 1, 1);
+                    const rBot = hasEdgeBetween(c + 1, 1, c + 1, 2);
+                    const lFull = hasEdgeBetween(c, 0, c, 2);
+                    const rFull = hasEdgeBetween(c + 1, 0, c + 1, 2);
+
+                    if (topE && botE && !midH && (lFull || (lTop && lBot)) && (rFull || (rTop && rBot))) {
+                        faces.push({
+                            key: `f_${c}_full`,
+                            centerC: c + 0.5,
+                            centerR: 1.0,
+                            rMin: 0,
+                            rMax: 2,
+                            cLeft: c,
+                            cRight: c + 1
+                        });
+                    } else {
+                        if (topE && midH && lTop && rTop) {
+                            faces.push({ key: `f_${c}_0`, centerC: c + 0.5, centerR: 0.5, rMin: 0, rMax: 1, cLeft: c, cRight: c + 1 });
+                        }
+                        if (midH && botE && lBot && rBot) {
+                            faces.push({ key: `f_${c}_1`, centerC: c + 0.5, centerR: 1.5, rMin: 1, rMax: 2, cLeft: c, cRight: c + 1 });
+                        }
+                    }
+                }
+
+                if (faces.length === 0) {
+                    return { valid: false, error: 'Belum ada loop tertutup (Mesh) yang lengkap pada grid.' };
+                }
+
+                // Modified Nodal Analysis (MNA)
+                const refNode = nodes[0];
+                const nonRefNodes = nodes.filter(k => k !== refNode);
+                const nodeIdx = {};
+                nonRefNodes.forEach((k, i) => nodeIdx[k] = i);
+
+                const idealEdges = b.edges.filter(e => e.type === 'V' || e.type === 'W');
+                const mnaSize = nonRefNodes.length + idealEdges.length;
+                const G = Array.from({ length: mnaSize }, () => new Array(mnaSize).fill(0));
+                const Z = new Array(mnaSize).fill(0);
+
+                b.edges.forEach(e => {
+                    const k1 = nodeKey(e.c1, e.r1);
+                    const k2 = nodeKey(e.c2, e.r2);
+                    const i1 = k1 === refNode ? -1 : nodeIdx[k1];
+                    const i2 = k2 === refNode ? -1 : nodeIdx[k2];
+
+                    if (e.type === 'R') {
+                        const rVal = Math.max(1e-4, Number(e.value) || 1);
+                        const g = 1 / rVal;
+                        if (i1 >= 0) G[i1][i1] += g;
+                        if (i2 >= 0) G[i2][i2] += g;
+                        if (i1 >= 0 && i2 >= 0) {
+                            G[i1][i2] -= g;
+                            G[i2][i1] -= g;
+                        }
+                    } else if (e.type === 'I') {
+                        const iVal = (Number(e.value) || 0) * (e.pol || 1);
+                        if (i1 >= 0) Z[i1] -= iVal;
+                        if (i2 >= 0) Z[i2] += iVal;
+                    }
+                });
+
+                idealEdges.forEach((e, idx) => {
+                    const row = nonRefNodes.length + idx;
+                    const k1 = nodeKey(e.c1, e.r1);
+                    const k2 = nodeKey(e.c2, e.r2);
+                    const i1 = k1 === refNode ? -1 : nodeIdx[k1];
+                    const i2 = k2 === refNode ? -1 : nodeIdx[k2];
+
+                    const vVal = e.type === 'W' ? 0 : (Number(e.value) || 0) * (e.pol || 1);
+                    if (i2 >= 0) {
+                        G[i2][row] += 1;
+                        G[row][i2] += 1;
+                    }
+                    if (i1 >= 0) {
+                        G[i1][row] -= 1;
+                        G[row][i1] -= 1;
+                    }
+                    Z[row] = vVal;
+                });
+
+                const mnaSol = solveLinearSystem(G, Z);
+                if (!mnaSol) {
+                    return { valid: false, error: 'Rangkaian mengalami konflik sumber (misalnya dua sumber tegangan paralel berbeda nilai atau sumber arus terbuka).' };
+                }
+
+                const nodeV = {};
+                nodeV[refNode] = 0;
+                nonRefNodes.forEach((k, i) => nodeV[k] = mnaSol[i]);
+
+                const edgeCurrents = {};
+                const edgeVoltages = {};
+                b.edges.forEach(e => {
+                    const k1 = nodeKey(e.c1, e.r1);
+                    const k2 = nodeKey(e.c2, e.r2);
+                    const v1 = nodeV[k1] || 0;
+                    const v2 = nodeV[k2] || 0;
+                    edgeVoltages[e.id] = Math.abs(v2 - v1);
+
+                    if (e.type === 'R') {
+                        const rVal = Math.max(1e-4, Number(e.value) || 1);
+                        edgeCurrents[e.id] = (v1 - v2) / rVal;
+                    } else if (e.type === 'I') {
+                        edgeCurrents[e.id] = (Number(e.value) || 0) * (e.pol || 1);
+                    } else {
+                        const idx = idealEdges.findIndex(ie => ie.id === e.id);
+                        edgeCurrents[e.id] = -mnaSol[nonRefNodes.length + idx];
+                    }
+                });
+
+                const meshCurrents = faces.map(f => {
+                    const d = b.loopDirs[f.key] || 1;
+                    const topE = hasEdgeBetween(f.cLeft, f.rMin, f.cRight, f.rMin);
+                    if (!topE) return 0;
+                    const cur1to2 = edgeCurrents[topE.id] || 0;
+                    const curRight = topE.c2 > topE.c1 ? cur1to2 : -cur1to2;
+                    return d * curRight;
+                });
+
+                // Deteksi Supermesh pada cabang perbatasan antar-face
+                const superEdges = [];
+                for (let i = 0; i < faces.length; i++) {
+                    for (let j = i + 1; j < faces.length; j++) {
+                        if (faces[i].cRight === faces[j].cLeft && faces[i].rMin === faces[j].rMin) {
+                            const midC = faces[i].cRight;
+                            const midE = b.edges.find(e =>
+                                e.type === 'I' &&
+                                e.c1 === midC && e.c2 === midC &&
+                                Math.min(e.r1, e.r2) >= faces[i].rMin &&
+                                Math.max(e.r1, e.r2) <= faces[i].rMax
+                            );
+                            if (midE) superEdges.push({ leftFace: i, rightFace: j, edge: midE });
+                        }
+                    }
+                }
+
+                // Susun persamaan KVL/KCL tiap loop untuk ditampilkan di panel Cramer / Substitusi
+                const eqList = [];
+                const A_bld = [];
+                const B_bld = [];
+                const N = faces.length;
+
+                faces.forEach((f, idx) => {
+                    const d = b.loopDirs[f.key] || 1;
+                    const row = new Array(N).fill(0);
+                    let rhs = 0;
+
+                    const topE = hasEdgeBetween(f.cLeft, f.rMin, f.cRight, f.rMin);
+                    const botE = hasEdgeBetween(f.cLeft, f.rMax, f.cRight, f.rMax);
+                    const leftE = hasEdgeBetween(f.cLeft, f.rMin, f.cLeft, f.rMax);
+                    const rightE = hasEdgeBetween(f.cRight, f.rMin, f.cRight, f.rMax);
+
+                    [topE, botE, leftE, rightE].forEach(ed => {
+                        if (ed && ed.type === 'R') row[idx] += Number(ed.value) || 0;
+                    });
+
+                    if (leftE && leftE.type === 'V') {
+                        const upRise = leftE.r2 < leftE.r1 ? (leftE.value * leftE.pol) : -(leftE.value * leftE.pol);
+                        rhs += d * upRise;
+                    }
+                    if (rightE && rightE.type === 'V') {
+                        const upRise = rightE.r2 < rightE.r1 ? (rightE.value * rightE.pol) : -(rightE.value * rightE.pol);
+                        rhs -= d * upRise;
+                    }
+
+                    faces.forEach((otherF, oIdx) => {
+                        if (oIdx === idx) return;
+                        const od = b.loopDirs[otherF.key] || 1;
+                        if (otherF.cRight === f.cLeft && otherF.rMin === f.rMin && leftE && leftE.type === 'R') {
+                            row[oIdx] -= d * od * (Number(leftE.value) || 0);
+                        }
+                        if (otherF.cLeft === f.cRight && otherF.rMin === f.rMin && rightE && rightE.type === 'R') {
+                            row[oIdx] -= d * od * (Number(rightE.value) || 0);
+                        }
+                    });
+
+                    A_bld.push(row);
+                    B_bld.push(rhs);
+                    eqList.push({
+                        type: 'kvl',
+                        label: `Persamaan Loop Mesh ${idx + 1} (${d === 1 ? 'CW' : 'CCW'})`,
+                        text: `${formatLinearExpr(row)} = ${fmt(rhs, 2)} V`
+                    });
+                });
+
+                if (superEdges.length > 0 && N >= 2) {
+                    const se = superEdges[0];
+                    const lIdx = se.leftFace;
+                    const rIdx = se.rightFace;
+                    const dL = b.loopDirs[faces[lIdx].key] || 1;
+                    const dR = b.loopDirs[faces[rIdx].key] || 1;
+                    const iDown = se.edge.r2 > se.edge.r1 ? (se.edge.value * se.edge.pol) : -(se.edge.value * se.edge.pol);
+
+                    const kclRow = new Array(N).fill(0);
+                    kclRow[lIdx] = dL;
+                    kclRow[rIdx] = -dR;
+
+                    const superRow = new Array(N).fill(0);
+                    for (let j = 0; j < N; j++) superRow[j] = A_bld[lIdx][j] + A_bld[rIdx][j];
+                    const superRhs = B_bld[lIdx] + B_bld[rIdx];
+
+                    A_bld[lIdx] = kclRow;
+                    B_bld[lIdx] = iDown;
+                    A_bld[rIdx] = superRow;
+                    B_bld[rIdx] = superRhs;
+
+                    eqList[lIdx] = {
+                        type: 'kcl',
+                        label: `Kendala KCL Supermesh (Sumber Arus ${se.edge.value} A)`,
+                        text: `${formatLinearExpr(kclRow)} = ${fmt(iDown, 3)} A`
+                    };
+                    eqList[rIdx] = {
+                        type: 'supermesh',
+                        label: `KVL Gabungan Supermesh (Mesh ${lIdx + 1} + Mesh ${rIdx + 1})`,
+                        text: `${formatLinearExpr(superRow)} = ${fmt(superRhs, 2)} V`
+                    };
+                }
+
+                return {
+                    valid: true,
+                    N: faces.length,
+                    faces: faces,
+                    A: A_bld,
+                    B: B_bld,
+                    eqDescriptions: eqList,
+                    meshCurrents: meshCurrents,
+                    edgeCurrents: edgeCurrents,
+                    edgeVoltages: edgeVoltages,
+                    superEdges: superEdges,
+                    isSupermesh: superEdges.length > 0
+                };
+            }
+
+            // =========================================================================
+            // PEMBUATAN LANGKAH PERHITUNGAN CRAMER & SUBSTITUSI
+            // =========================================================================
+            function buildCramerStepsHTML(A, B, currents) {
+                const N = B.length;
+                if (N > 3) {
+                    return `
+                        <div class="step-card">
+                            <div class="step-title">2. Penyelesaian Sistem Persamaan Linear</div>
+                            <div class="step-sub">Sistem ${N} mesh diselesaikan menggunakan eliminasi matriks otomatis.</div>
+                        </div>
+                    `;
+                }
+
+                const detMain = determinant(A);
+                const dets = [];
+                const subMatsHTML = [];
+
+                const renderMat = (mat) => {
+                    return mat.map(row => `[ ${row.map(v => fmt(v, 2).padStart(6, ' ')).join('  ')} ]`).join('<br>');
+                };
+
+                subMatsHTML.push(`
+                    <div class="matrix-card">
+                        <strong>Matriks Utama (&Delta;)</strong>
+                        <div class="mono" style="margin:4px 0;white-space:pre;">${renderMat(A)}</div>
+                        <div>&Delta; = <strong>${fmt(detMain, 3)}</strong></div>
+                    </div>
+                `);
+
+                for (let col = 0; col < N; col++) {
+                    const Ai = A.map((row, rIdx) => {
+                        const copy = row.slice();
+                        copy[col] = B[rIdx];
+                        return copy;
+                    });
+                    const dVal = determinant(Ai);
+                    dets.push(dVal);
+                    subMatsHTML.push(`
+                        <div class="matrix-card">
+                            <strong>Matriks &Delta;<sub>${col + 1}</sub></strong>
+                            <div class="mono" style="margin:4px 0;white-space:pre;">${renderMat(Ai)}</div>
+                            <div>&Delta;<sub>${col + 1}</sub> = <strong>${fmt(dVal, 3)}</strong></div>
+                        </div>
+                    `);
+                }
+
+                const formulasHTML = currents.map((val, idx) => `
+                    <div class="eq-box emerald mono">
+                        I<sub>${idx + 1}</sub> = &Delta;<sub>${idx + 1}</sub> / &Delta; = ${fmt(dets[idx], 3)} / ${fmt(detMain, 3)} = <strong>${state.showCurrentValues ? fmt(val, 3) + ' A' : '••• A'}</strong>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="step-card">
+                        <div class="step-title">2. Penyelesaian Menggunakan Aturan Cramer (Determinan Matriks)</div>
+                        <div class="step-sub">Menghitung determinan utama (&Delta;) dan mengganti tiap kolom koefisien dengan vektor konstanta:</div>
+                        <div class="matrix-wrap">${subMatsHTML.join('')}</div>
+                        ${formulasHTML}
+                    </div>
+                `;
+            }
+
+            function buildSubstitutionStepsHTML(A, B, currents) {
+                const N = B.length;
+                if (N === 2) {
+                    let eqIdx = 0;
+                    if (Math.abs(A[1][0]) < 1e-8 || Math.abs(A[1][1]) < 1e-8) eqIdx = 1;
+                    const otherIdx = 1 - eqIdx;
+
+                    const a1 = A[eqIdx][0], b1 = A[eqIdx][1], c1 = B[eqIdx];
+                    const a2 = A[otherIdx][0], b2 = A[otherIdx][1], c2 = B[otherIdx];
+
+                    const i1Str = state.showCurrentValues ? `${fmt(currents[0], 3)} A` : '••• A';
+                    const i2Str = state.showCurrentValues ? `${fmt(currents[1], 3)} A` : '••• A';
+
+                    let step1Text = '';
+                    let step2Text = '';
+                    if (Math.abs(a1) < 1e-8) {
+                        step1Text = `Dari Persamaan (${eqIdx + 1}): I<sub>2</sub> = ${fmt(c1, 3)} / ${fmt(b1, 3)} = <strong>${i2Str}</strong>`;
+                        step2Text = `Substitusikan I<sub>2</sub> ke Persamaan (${otherIdx + 1}): ${fmt(a2, 2)}I<sub>1</sub> + (${fmt(b2, 2)})I<sub>2</sub> = ${fmt(c2, 2)} &rArr; I<sub>1</sub> = <strong>${i1Str}</strong>`;
+                    } else if (Math.abs(b1) < 1e-8) {
+                        step1Text = `Dari Persamaan (${eqIdx + 1}): I<sub>1</sub> = ${fmt(c1, 3)} / ${fmt(a1, 3)} = <strong>${i1Str}</strong>`;
+                        step2Text = `Substitusikan I<sub>1</sub> ke Persamaan (${otherIdx + 1}): (${fmt(a2, 2)})I<sub>1</sub> + ${fmt(b2, 2)}I<sub>2</sub> = ${fmt(c2, 2)} &rArr; I<sub>2</sub> = <strong>${i2Str}</strong>`;
+                    } else {
+                        const slope = -b1 / a1;
+                        const intercept = c1 / a1;
+                        step1Text = `Nyatakan I<sub>1</sub> dari Persamaan (${eqIdx + 1}): I<sub>1</sub> = ${fmt(intercept, 3)} ${fmtSigned(slope, 3)}I<sub>2</sub>`;
+                        const combinedB = a2 * slope + b2;
+                        const combinedC = c2 - a2 * intercept;
+                        step2Text = `Substitusikan ke Persamaan (${otherIdx + 1}): (${fmt(combinedB, 3)})I<sub>2</sub> = ${fmt(combinedC, 3)} &rArr; I<sub>2</sub> = <strong>${i2Str}</strong>, lalu I<sub>1</sub> = <strong>${i1Str}</strong>`;
+                    }
+
+                    return `
+                        <div class="step-card">
+                            <div class="step-title">2. Penyelesaian Menggunakan Metode Substitusi Aljabar</div>
+                            <div class="step-sub">Mengisolasi satu variabel dari persamaan kendala/KVL lalu mensubstitusikannya ke persamaan lainnya:</div>
+                            <div class="eq-box mono">${step1Text}</div>
+                            <div class="eq-box emerald mono">${step2Text}</div>
+                        </div>
+                    `;
+                }
+
+                const steps = currents.map((val, idx) => `
+                    <div class="eq-box emerald mono">
+                        Eliminasi &amp; substitusi bertahap menghasilkan I<sub>${idx + 1}</sub> = <strong>${state.showCurrentValues ? fmt(val, 3) + ' A' : '••• A'}</strong>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="step-card">
+                        <div class="step-title">2. Penyelesaian Menggunakan Metode Substitusi &amp; Eliminasi</div>
+                        <div class="step-sub">Substitusi persamaan kendala dan eliminasi bertahap pada sistem ${N} persamaan:</div>
+                        ${steps}
+                    </div>
+                `;
+            }
+
+            // =========================================================================
+            // PEMBARUAN UI KONTROL & HASIL PERHITUNGAN
+            // =========================================================================
+            function renderTemplateControls() {
+                const N = state.meshCount;
+                const loopWrap = document.getElementById('loopDirControls');
+                let loopHTML = '';
+                for (let m = 0; m < N; m++) {
+                    const isCW = state.loopDirs[m] === 1;
+                    loopHTML += `
+                        <button type="button" data-loop-idx="${m}" style="font-size:0.72rem;padding:4px 8px;">
+                            Loop I<sub>${m + 1}</sub>: <strong>${isCW ? '↻ CW' : '↺ CCW'}</strong>
+                        </button>
+                    `;
+                }
+                loopWrap.innerHTML = loopHTML;
+                loopWrap.querySelectorAll('button').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const idx = Number(btn.getAttribute('data-loop-idx'));
+                        state.loopDirs[idx] *= -1;
+                        renderTemplateControls();
+                        updateSimulation();
+                    });
+                });
+
+                const activeBranchIndices = N === 2 ? [0, 1, 3] : [0, 1, 2, 3];
+                const grid = document.getElementById('branchControlsGrid');
+                grid.innerHTML = activeBranchIndices.map(bIdx => {
+                    const b = state.branches[bIdx];
+                    const showR = b.kind === 'R' || b.kind === 'RV' || b.kind === 'RI';
+                    const showV = b.kind === 'V' || b.kind === 'RV';
+                    const showI = b.kind === 'I' || b.kind === 'RI';
+                    const isMid = bIdx === 1 || bIdx === 2;
+
+                    return `
+                        <div class="branch-card">
+                            <h4>
+                                <span>${b.label}</span>
+                                ${isMid && showI ? '<span style="font-size:0.66rem;background:var(--amber-soft);color:var(--amber);padding:2px 6px;border-radius:4px;">Supermesh</span>' : ''}
+                            </h4>
+                            <div class="field-row">
+                                <label>Elemen:</label>
+                                <select data-bidx="${bIdx}" data-prop="kind">
+                                    <option value="R" ${b.kind === 'R' ? 'selected' : ''}>Resistor (R)</option>
+                                    <option value="V" ${b.kind === 'V' ? 'selected' : ''}>Sumber Tegangan (V)</option>
+                                    <option value="I" ${b.kind === 'I' ? 'selected' : ''}>Sumber Arus (Is)</option>
+                                    <option value="RV" ${b.kind === 'RV' ? 'selected' : ''}>Seri R + V</option>
+                                    <option value="RI" ${b.kind === 'RI' ? 'selected' : ''}>Seri R + Is</option>
+                                </select>
+                            </div>
+                            ${showR ? `
+                            <div class="field-row">
+                                <label>Hambatan (&Omega;):</label>
+                                <input type="number" step="0.5" min="0" value="${b.r}" data-bidx="${bIdx}" data-prop="r">
+                            </div>` : ''}
+                            ${showV ? `
+                            <div class="field-row">
+                                <label>Tegangan (V):</label>
+                                <div style="display:flex;gap:4px;">
+                                    <input type="number" step="1" min="0" value="${b.v}" data-bidx="${bIdx}" data-prop="v">
+                                    <button type="button" data-bidx="${bIdx}" data-action="flipV" style="padding:3px 6px;" title="Balik Polaritas + / -">${b.vPol === 1 ? '+ Atas' : '+ Bawah'}</button>
+                                </div>
+                            </div>` : ''}
+                            ${showI ? `
+                            <div class="field-row">
+                                <label>Arus Is (A):</label>
+                                <div style="display:flex;gap:4px;">
+                                    <input type="number" step="0.5" min="0" value="${b.i}" data-bidx="${bIdx}" data-prop="i">
+                                    <button type="button" data-bidx="${bIdx}" data-action="flipI" style="padding:3px 6px;" title="Balik Arah Panah Arus">${b.iDir === 1 ? '⬆️ Atas' : '⬇️ Bawah'}</button>
+                                </div>
+                            </div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+
+                grid.querySelectorAll('select').forEach(sel => {
+                    sel.addEventListener('change', () => {
+                        const idx = Number(sel.getAttribute('data-bidx'));
+                        state.branches[idx].kind = sel.value;
+                        renderTemplateControls();
+                        updateSimulation();
+                    });
+                });
+
+                grid.querySelectorAll('input[type="number"]').forEach(inp => {
+                    inp.addEventListener('input', () => {
+                        const idx = Number(inp.getAttribute('data-bidx'));
+                        const prop = inp.getAttribute('data-prop');
+                        state.branches[idx][prop] = Math.max(0, parseFloat(inp.value) || 0);
+                        updateSimulation();
+                    });
+                });
+
+                grid.querySelectorAll('button[data-action]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const idx = Number(btn.getAttribute('data-bidx'));
+                        const act = btn.getAttribute('data-action');
+                        if (act === 'flipV') state.branches[idx].vPol *= -1;
+                        if (act === 'flipI') state.branches[idx].iDir *= -1;
+                        renderTemplateControls();
+                        updateSimulation();
+                    });
+                });
+
+                const topWrap = document.getElementById('topResistorControls');
+                const topLabels = ['R₁ (Atas Mesh 1)', 'R₂ (Atas Mesh 2)', 'R₄ (Atas Mesh 3)'];
+                let topHTML = '<span style="font-size:0.75rem;font-weight:800;color:var(--text-muted);">Resistor Jalur Atas:</span>';
+                for (let m = 0; m < N; m++) {
+                    topHTML += `
+                        <div class="field-row" style="background:var(--bg-subtle);padding:5px 9px;border-radius:8px;border:1px solid var(--border-color);">
+                            <label>${topLabels[m]} (&Omega;):</label>
+                            <input type="number" step="0.5" min="0.5" value="${state.topR[m]}" data-topidx="${m}">
+                        </div>
+                    `;
+                }
+                topWrap.innerHTML = topHTML;
+                topWrap.querySelectorAll('input').forEach(inp => {
+                    inp.addEventListener('input', () => {
+                        const idx = Number(inp.getAttribute('data-topidx'));
+                        state.topR[idx] = Math.max(0.1, parseFloat(inp.value) || 0.1);
+                        updateSimulation();
+                    });
+                });
+            }
+
+            function renderRightPanel() {
+                const banner = document.getElementById('statusBanner');
+                const resContainer = document.getElementById('resultCardsContainer');
+                const stepsContainer = document.getElementById('mathStepsContainer');
+                const tableContainer = document.getElementById('tableContainer');
+                const minusBanner = document.getElementById('minusBanner');
+
+                if (state.mode === 'template') {
+                    const sol = lastTemplateSol;
+                    if (!sol || !sol.valid) {
+                        banner.className = 'status-banner error';
+                        banner.textContent = (sol && sol.error) || 'Rangkaian tidak valid.';
+                        resContainer.innerHTML = '';
+                        stepsContainer.innerHTML = '';
+                        tableContainer.innerHTML = '';
+                        minusBanner.classList.add('hidden');
+                        return;
+                    }
+
+                    if (sol.isSupermesh) {
+                        banner.className = 'status-banner supermesh';
+                        banner.innerHTML = `<strong>⚡ Mode Supermesh Aktif (${sol.N} Mesh):</strong> Sumber arus terpasang di cabang perbatasan antar-mesh sehingga terbentuk lintasan gabungan Supermesh (garis putus-putus oranye) beserta persamaan kendala KCL.${sol.autoBalancedNote ? '<br><span style="font-size:0.72rem;">ℹ️ ' + sol.autoBalancedNote + '</span>' : ''}`;
+                    } else {
+                        banner.className = 'status-banner';
+                        banner.innerHTML = `<strong>✓ Analisis Mesh Standar (${sol.N} Mesh):</strong> Setiap loop memiliki persamaan KVL independen yang diselesaikan secara langsung.${sol.autoBalancedNote ? '<br><span style="font-size:0.72rem;">ℹ️ ' + sol.autoBalancedNote + '</span>' : ''}`;
+                    }
+
+                    // Kartu Ringkasan Arus Mesh
+                    resContainer.innerHTML = sol.currents.map((cur, idx) => {
+                        const dirLabel = state.loopDirs[idx] === 1 ? 'CW' : 'CCW';
+                        const valStr = state.showCurrentValues ? `${fmt(cur, 3)} A` : '••• A';
+                        const subStr = !state.showCurrentValues
+                            ? 'Nilai disembunyikan'
+                            : (Math.abs(cur) < 1e-6 ? 'Arus nol' : (cur > 0 ? 'Searah asumsi loop' : 'Berlawanan asumsi'));
+                        const col = !state.showCurrentValues ? 'var(--text-muted)' : (cur < -1e-5 ? 'var(--rose)' : 'var(--primary)');
+                        return `
+                            <div class="res-pill">
+                                <div class="lbl">Arus Mesh I<sub>${idx + 1}</sub> (${dirLabel})</div>
+                                <div class="val mono" style="color:${col};">${valStr}</div>
+                                <div class="dir">${subStr}</div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    // Panel Langkah Perhitungan
+                    if (state.showCalculations) {
+                        const eqHTML = sol.eqDescriptions.map(eq => `
+                            <div class="eq-box ${eq.type === 'kcl' ? 'amber' : (eq.type === 'supermesh' ? 'emerald' : '')}">
+                                <div style="font-size:0.7rem;font-weight:700;color:var(--text-muted);">${eq.label}</div>
+                                <div class="mono" style="margin-top:2px;">${eq.text}</div>
+                            </div>
+                        `).join('');
+
+                        const methodHTML = state.calcMethod === 'cramer'
+                            ? buildCramerStepsHTML(sol.A, sol.B, sol.currents)
+                            : buildSubstitutionStepsHTML(sol.A, sol.B, sol.currents);
+
+                        stepsContainer.innerHTML = `
+                            <div class="step-card">
+                                <div class="step-title">1. Penyusunan Persamaan KVL &amp; Kendala KCL</div>
+                                <div class="step-sub">Diturunkan dari arah loop dan elemen setiap cabang:</div>
+                                ${eqHTML}
+                            </div>
+                            ${methodHTML}
+                        `;
+                    } else {
+                        stepsContainer.innerHTML = `
+                            <div class="step-card" style="text-align:center;padding:18px 14px;border-style:dashed;">
+                                <div style="font-size:0.84rem;font-weight:800;margin-bottom:4px;">🙈 Langkah Perhitungan Disembunyikan</div>
+                                <div style="font-size:0.74rem;color:var(--text-muted);margin-bottom:10px;">Cocok untuk latihan soal atau sesi tanya-jawab presentasi di kelas.</div>
+                                <button type="button" class="btn-primary" id="btnRevealMathInline">📐 Buka Pembahasan</button>
+                            </div>
+                        `;
+                        const btnRev = document.getElementById('btnRevealMathInline');
+                        if (btnRev) btnRev.addEventListener('click', toggleCalculations);
+                    }
+
+                    // Tabel Rincian Arus, Tegangan, & Daya Cabang
+                    const bf = sol.branchFlows;
+                    const rows = [
+                        { name: 'R₁ (Atas Mesh 1)', desc: `${state.topR[0]} Ω`, i: bf.top1, v: Math.abs(bf.top1) * state.topR[0] },
+                        { name: 'R₂ (Atas Mesh 2)', desc: `${state.topR[1]} Ω`, i: bf.top2, v: Math.abs(bf.top2) * state.topR[1] }
+                    ];
+                    if (sol.N === 3) {
+                        rows.push({ name: 'R₄ (Atas Mesh 3)', desc: `${state.topR[2]} Ω`, i: bf.top3, v: Math.abs(bf.top3) * state.topR[2] });
+                    }
+                    rows.push(
+                        { name: 'Cabang Kiri', desc: state.branches[0].kind, i: bf.leftUp, v: calcBranchVoltage(state.branches[0], Math.abs(bf.leftUp)) },
+                        { name: 'Cabang Tengah 1', desc: state.branches[1].kind, i: bf.mid12Down, v: calcBranchVoltage(state.branches[1], Math.abs(bf.mid12Down)) }
+                    );
+                    if (sol.N === 3) {
+                        rows.push({ name: 'Cabang Tengah 2', desc: state.branches[2].kind, i: bf.mid23Down, v: calcBranchVoltage(state.branches[2], Math.abs(bf.mid23Down)) });
+                    }
+                    rows.push({ name: 'Cabang Kanan', desc: state.branches[3].kind, i: bf.rightDown, v: calcBranchVoltage(state.branches[3], Math.abs(bf.rightDown)) });
+
+                    tableContainer.innerHTML = `
+                        <div class="step-card" style="margin-bottom:0;">
+                            <div class="step-title" style="margin-bottom:8px;">Rincian Arus, Tegangan, &amp; Daya Setiap Komponen</div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Cabang</th>
+                                        <th>Elemen</th>
+                                        <th>Arus (I)</th>
+                                        <th>Tegangan (V)</th>
+                                        <th>Daya (P)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${rows.map(r => {
+                                        const absI = Math.abs(r.i);
+                                        const powerW = absI * r.v;
+                                        return `
+                                            <tr>
+                                                <td><strong>${r.name}</strong></td>
+                                                <td class="mono">${r.desc}</td>
+                                                <td class="mono">${state.showCurrentValues ? fmt(absI, 3) + ' A' : '••• A'}</td>
+                                                <td class="mono">${state.showCurrentValues ? fmt(r.v, 2) + ' V' : '••• V'}</td>
+                                                <td class="mono">${state.showCurrentValues ? fmt(powerW, 2) + ' W' : '••• W'}</td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+
+                    const hasNeg = state.showCurrentValues && sol.currents.some(c => c < -1e-5);
+                    minusBanner.classList.toggle('hidden', !hasNeg);
+                } else {
+                    // Mode Rakit Sendiri (Grid)
+                    const sol = lastBuilderSol;
+                    const loopWrap = document.getElementById('builderLoopControls');
+                    if (sol && sol.valid && sol.faces) {
+                        loopWrap.innerHTML = sol.faces.map((f, idx) => {
+                            const d = state.builder.loopDirs[f.key] || 1;
+                            return `<button type="button" data-fkey="${f.key}" style="font-size:0.72rem;padding:4px 8px;">Loop I<sub>${idx + 1}</sub>: <strong>${d === 1 ? '↻ CW' : '↺ CCW'}</strong></button>`;
+                        }).join('');
+                        loopWrap.querySelectorAll('button').forEach(btn => {
+                            btn.addEventListener('click', () => {
+                                const k = btn.getAttribute('data-fkey');
+                                state.builder.loopDirs[k] = (state.builder.loopDirs[k] || 1) === 1 ? -1 : 1;
+                                updateSimulation();
+                            });
+                        });
+                    } else {
+                        loopWrap.innerHTML = '';
+                    }
+
+                    if (!sol || !sol.valid) {
+                        banner.className = 'status-banner error';
+                        banner.textContent = (sol && sol.error) || 'Rangkaian rakitan belum lengkap.';
+                        resContainer.innerHTML = '';
+                        stepsContainer.innerHTML = '';
+                        tableContainer.innerHTML = '';
+                        minusBanner.classList.add('hidden');
+                        return;
+                    }
+
+                    banner.className = sol.isSupermesh ? 'status-banner supermesh' : 'status-banner';
+                    banner.innerHTML = sol.isSupermesh
+                        ? `<strong>⚡ Terdeteksi ${sol.N} Mesh dengan Supermesh!</strong> Sumber arus terpasang di cabang perbatasan antar-mesh.`
+                        : `<strong>✓ Terdeteksi ${sol.N} Mesh Tertutup:</strong> Analisis loop berhasil diselesaikan secara otomatis.`;
+
+                    resContainer.innerHTML = sol.meshCurrents.map((cur, idx) => {
+                        const f = sol.faces[idx];
+                        const d = state.builder.loopDirs[f.key] || 1;
+                        const valStr = state.showCurrentValues ? `${fmt(cur, 3)} A` : '••• A';
+                        const col = !state.showCurrentValues ? 'var(--text-muted)' : (cur < -1e-5 ? 'var(--rose)' : 'var(--primary)');
+                        return `
+                            <div class="res-pill">
+                                <div class="lbl">Arus Mesh I<sub>${idx + 1}</sub> (${d === 1 ? 'CW' : 'CCW'})</div>
+                                <div class="val mono" style="color:${col};">${valStr}</div>
+                                <div class="dir">${!state.showCurrentValues ? 'Nilai disembunyikan' : (cur >= 0 ? 'Searah loop' : 'Berlawanan loop')}</div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    if (state.showCalculations) {
+                        const eqHTML = (sol.eqDescriptions || []).map(eq => `
+                            <div class="eq-box ${eq.type === 'kcl' ? 'amber' : (eq.type === 'supermesh' ? 'emerald' : '')}">
+                                <div style="font-size:0.7rem;font-weight:700;color:var(--text-muted);">${eq.label}</div>
+                                <div class="mono" style="margin-top:2px;">${eq.text}</div>
+                            </div>
+                        `).join('');
+
+                        const methodHTML = state.calcMethod === 'cramer'
+                            ? buildCramerStepsHTML(sol.A, sol.B, sol.meshCurrents)
+                            : buildSubstitutionStepsHTML(sol.A, sol.B, sol.meshCurrents);
+
+                        stepsContainer.innerHTML = `
+                            <div class="step-card">
+                                <div class="step-title">1. Persamaan Loop &amp; Kendala Rangkaian Rakitan</div>
+                                ${eqHTML}
+                            </div>
+                            ${methodHTML}
+                        `;
+                    } else {
+                        stepsContainer.innerHTML = `
+                            <div class="step-card" style="text-align:center;padding:18px 14px;border-style:dashed;">
+                                <div style="font-size:0.84rem;font-weight:800;margin-bottom:4px;">🙈 Langkah Perhitungan Disembunyikan</div>
+                                <button type="button" class="btn-primary" id="btnRevealMathInline2">📐 Buka Pembahasan</button>
+                            </div>
+                        `;
+                        const btnRev2 = document.getElementById('btnRevealMathInline2');
+                        if (btnRev2) btnRev2.addEventListener('click', toggleCalculations);
+                    }
+
+                    const compEdges = state.builder.edges.filter(e => e.type !== 'W');
+                    tableContainer.innerHTML = `
+                        <div class="step-card" style="margin-bottom:0;">
+                            <div class="step-title" style="margin-bottom:8px;">Rincian Arus, Tegangan, &amp; Daya Komponen Rakitan</div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Komponen</th>
+                                        <th>Koordinat</th>
+                                        <th>Arus (I)</th>
+                                        <th>Tegangan (V)</th>
+                                        <th>Daya (P)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${compEdges.map(e => {
+                                        const cur = Math.abs(sol.edgeCurrents[e.id] || 0);
+                                        const volt = sol.edgeVoltages[e.id] || 0;
+                                        const powerW = cur * volt;
+                                        const lbl = e.type === 'R' ? `Resistor (${e.value} Ω)` : (e.type === 'V' ? `Sumber V (${e.value} V)` : `Sumber Is (${e.value} A)`);
+                                        return `
+                                            <tr>
+                                                <td><strong>${lbl}</strong></td>
+                                                <td class="mono">(${e.c1},${e.r1})&rarr;(${e.c2},${e.r2})</td>
+                                                <td class="mono">${state.showCurrentValues ? fmt(cur, 3) + ' A' : '••• A'}</td>
+                                                <td class="mono">${state.showCurrentValues ? fmt(volt, 2) + ' V' : '••• V'}</td>
+                                                <td class="mono">${state.showCurrentValues ? fmt(powerW, 2) + ' W' : '••• W'}</td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+
+                    const hasNeg = state.showCurrentValues && sol.meshCurrents.some(c => c < -1e-5);
+                    minusBanner.classList.toggle('hidden', !hasNeg);
+                }
+            }
+
+            // =========================================================================
+            // PENGGAMBARAN KANVAS DIAGRAM RANGKAIAN & PARTIKEL ARUS
+            // =========================================================================
+            function getThemeColors() {
+                const isDark = state.theme === 'dark';
+                const primaries = {
+                    classic: '#2563eb',
+                    emerald: '#059669',
+                    purple: '#7c3aed',
+                    terracotta: '#ea580c',
+                    dark: '#38bdf8'
+                };
+                return {
+                    bg: isDark ? '#0b1120' : '#ffffff',
+                    wire: isDark ? '#e2e8f0' : '#1e293b',
+                    text: isDark ? '#f8fafc' : '#0f172a',
+                    muted: isDark ? '#94a3b8' : '#475569',
+                    primary: primaries[state.theme] || '#2563eb',
+                    amber: '#d97706',
+                    emerald: '#059669',
+                    rose: '#e11d48',
+                    gridDot: isDark ? '#334155' : '#cbd5e1'
+                };
+            }
+
+            function drawResistorSymbol(ctx, x1, y1, x2, y2, label, colors) {
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                const len = Math.hypot(dx, dy);
+                if (len < 1) return;
+                const ux = dx / len;
+                const uy = dy / len;
+                const nx = -uy;
+                const ny = ux;
+
+                const zigLen = Math.min(44, len * 0.55);
+                const lead = (len - zigLen) / 2;
+
+                ctx.strokeStyle = colors.wire;
+                ctx.lineWidth = 2.4;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x1 + ux * lead, y1 + uy * lead);
+
+                const teeth = 6;
+                const amp = 7;
+                for (let i = 0; i < teeth; i++) {
+                    const t1 = lead + (zigLen * (i + 0.25)) / teeth;
+                    const t2 = lead + (zigLen * (i + 0.75)) / teeth;
+                    ctx.lineTo(x1 + ux * t1 + nx * amp, y1 + uy * t1 + ny * amp);
+                    ctx.lineTo(x1 + ux * t2 - nx * amp, y1 + uy * t2 - ny * amp);
+                }
+                ctx.lineTo(x1 + ux * (lead + zigLen), y1 + uy * (lead + zigLen));
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+
+                if (label) {
+                    const mx = (x1 + x2) / 2 + nx * 18;
+                    const my = (y1 + y2) / 2 + ny * 18;
+                    ctx.fillStyle = colors.text;
+                    ctx.font = 'bold 12px Inter, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(label, mx, my);
+                }
+            }
+
+            function drawVoltageSourceSymbol(ctx, x1, y1, x2, y2, polUp, label, colors) {
+                const mx = (x1 + x2) / 2;
+                const my = (y1 + y2) / 2;
+                const r = 18;
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                const len = Math.hypot(dx, dy);
+                const ux = dx / len;
+                const uy = dy / len;
+                const nx = -uy;
+                const ny = ux;
+
+                ctx.strokeStyle = colors.wire;
+                ctx.lineWidth = 2.4;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(mx - ux * r, my - uy * r);
+                ctx.moveTo(mx + ux * r, my + uy * r);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+
+                ctx.fillStyle = colors.bg;
+                ctx.beginPath();
+                ctx.arc(mx, my, r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = colors.primary;
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+
+                ctx.fillStyle = colors.rose;
+                ctx.font = 'bold 14px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const signOffset = polUp ? -7 : 7;
+                ctx.fillText('+', mx + ux * signOffset, my + uy * signOffset);
+                ctx.fillStyle = colors.primary;
+                ctx.fillText('−', mx - ux * signOffset, my - uy * signOffset);
+
+                if (label) {
+                    ctx.fillStyle = colors.text;
+                    ctx.font = 'bold 12px Inter, sans-serif';
+                    ctx.fillText(label, mx + nx * 28, my + ny * 28);
+                }
+            }
+
+            function drawCurrentSourceSymbol(ctx, x1, y1, x2, y2, dirUp, label, colors) {
+                const mx = (x1 + x2) / 2;
+                const my = (y1 + y2) / 2;
+                const r = 18;
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                const len = Math.hypot(dx, dy);
+                const ux = dx / len;
+                const uy = dy / len;
+                const nx = -uy;
+                const ny = ux;
+
+                ctx.strokeStyle = colors.wire;
+                ctx.lineWidth = 2.4;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(mx - ux * r, my - uy * r);
+                ctx.moveTo(mx + ux * r, my + uy * r);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+
+                ctx.fillStyle = colors.bg;
+                ctx.beginPath();
+                ctx.arc(mx, my, r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = colors.amber;
+                ctx.lineWidth = 2.6;
+                ctx.stroke();
+
+                const arrowDir = dirUp ? -1 : 1;
+                ctx.strokeStyle = colors.amber;
+                ctx.fillStyle = colors.amber;
+                ctx.lineWidth = 2.4;
+                ctx.beginPath();
+                ctx.moveTo(mx - ux * 9 * arrowDir, my - uy * 9 * arrowDir);
+                ctx.lineTo(mx + ux * 9 * arrowDir, my + uy * 9 * arrowDir);
+                ctx.stroke();
+
+                const tipX = mx + ux * 10 * arrowDir;
+                const tipY = my + uy * 10 * arrowDir;
+                ctx.beginPath();
+                ctx.moveTo(tipX, tipY);
+                ctx.lineTo(tipX - ux * 6 * arrowDir + nx * 4, tipY - uy * 6 * arrowDir + ny * 4);
+                ctx.lineTo(tipX - ux * 6 * arrowDir - nx * 4, tipY - uy * 6 * arrowDir - ny * 4);
+                ctx.closePath();
+                ctx.fill();
+
+                if (label) {
+                    ctx.fillStyle = colors.amber;
+                    ctx.font = 'bold 12px Inter, sans-serif';
+                    ctx.fillText(label, mx + nx * 28, my + ny * 28);
+                }
+            }
+
+            function drawLoopArrow(ctx, cx, cy, radius, dir, label, color) {
+                ctx.save();
+                ctx.strokeStyle = color;
+                ctx.fillStyle = color;
+                ctx.lineWidth = 2.2;
+
+                const startAngle = dir === 1 ? -Math.PI * 0.75 : -Math.PI * 0.25;
+                const endAngle = dir === 1 ? Math.PI * 0.75 : Math.PI * 1.25;
+
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, startAngle, endAngle, dir !== 1);
+                ctx.stroke();
+
+                const tipX = cx + radius * Math.cos(endAngle);
+                const tipY = cy + radius * Math.sin(endAngle);
+                const tangent = endAngle + (dir === 1 ? Math.PI / 2 : -Math.PI / 2);
+
+                ctx.beginPath();
+                ctx.moveTo(tipX, tipY);
+                ctx.lineTo(tipX - 8 * Math.cos(tangent - 0.45), tipY - 8 * Math.sin(tangent - 0.45));
+                ctx.lineTo(tipX - 8 * Math.cos(tangent + 0.45), tipY - 8 * Math.sin(tangent + 0.45));
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.font = 'bold 12px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(label, cx, cy);
+                ctx.restore();
+            }
+
+            function drawParticlesOnSegment(ctx, x1, y1, x2, y2, signedCurrent, colors) {
+                const mag = Math.abs(signedCurrent);
+                if (mag < 1e-5) return;
+
+                const flowSign = (signedCurrent >= 0 ? 1 : -1) * (state.flowMode === 'conventional' ? 1 : -1);
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                const len = Math.hypot(dx, dy);
+                if (len < 10) return;
+
+                const spacing = 36;
+                const count = Math.max(2, Math.floor(len / spacing));
+                const speedFactor = Math.min(2.5, 0.4 + mag * 0.35);
+                const shift = ((state.particlePhase * speedFactor * flowSign) % 1 + 1) % 1;
+
+                ctx.fillStyle = state.flowMode === 'conventional' ? colors.primary : colors.emerald;
+                for (let i = 0; i < count; i++) {
+                    const t = (i + shift) / count;
+                    const px = x1 + dx * t;
+                    const py = y1 + dy * t;
+                    ctx.beginPath();
+                    ctx.arc(px, py, 3.6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            function renderCanvas() {
+                const canvas = document.getElementById('circuitCanvas');
+                const wrapper = document.getElementById('canvasWrapper');
+                if (!canvas || !wrapper) return;
+
+                const rect = wrapper.getBoundingClientRect();
+                const w = rect.width > 50 ? rect.width : 720;
+                const h = rect.height > 50 ? rect.height : 400;
+                const dpr = window.devicePixelRatio || 1;
+
+                if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+                    canvas.width = Math.round(w * dpr);
+                    canvas.height = Math.round(h * dpr);
+                }
+
+                const ctx = canvas.getContext('2d');
+                ctx.save();
+                ctx.scale(dpr, dpr);
+
+                const colors = getThemeColors();
+                ctx.fillStyle = colors.bg;
+                ctx.fillRect(0, 0, w, h);
+
+                if (state.mode === 'template') {
+                    drawTemplateCanvas(ctx, w, h, colors);
+                } else {
+                    drawBuilderCanvas(ctx, w, h, colors);
+                }
+
+                ctx.restore();
+            }
+
+            function drawTemplateCanvas(ctx, w, h, colors) {
+                const sol = lastTemplateSol;
+                const N = state.meshCount;
+                const padX = N === 2 ? Math.max(95, w * 0.16) : Math.max(75, w * 0.11);
+                const yTop = 78;
+                const yBot = h - 68;
+                const totalW = w - padX * 2;
+                const meshW = totalW / N;
+
+                const xs = [];
+                for (let i = 0; i <= N; i++) xs.push(padX + i * meshW);
+
+                ctx.strokeStyle = colors.wire;
+                ctx.lineWidth = 2.6;
+                ctx.beginPath();
+                ctx.moveTo(xs[0], yBot);
+                ctx.lineTo(xs[N], yBot);
+                ctx.stroke();
+
+                for (let m = 0; m < N; m++) {
+                    drawResistorSymbol(ctx, xs[m], yTop, xs[m + 1], yTop, `R${m === 2 ? 4 : m + 1} = ${state.topR[m]}Ω`, colors);
+                }
+
+                const activeBranches = N === 2
+                    ? [state.branches[0], state.branches[1], state.branches[3]]
+                    : [state.branches[0], state.branches[1], state.branches[2], state.branches[3]];
+
+                activeBranches.forEach((b, idx) => {
+                    const x = xs[idx];
+                    const yMid = (yTop + yBot) / 2;
+
+                    if (b.kind === 'R') {
+                        drawResistorSymbol(ctx, x, yTop, x, yBot, `${b.r}Ω`, colors);
+                    } else if (b.kind === 'V') {
+                        drawVoltageSourceSymbol(ctx, x, yTop, x, yBot, b.vPol === 1, `${b.v}V`, colors);
+                    } else if (b.kind === 'I') {
+                        drawCurrentSourceSymbol(ctx, x, yTop, x, yBot, b.iDir === 1, `${b.i}A`, colors);
+                    } else if (b.kind === 'RV') {
+                        drawResistorSymbol(ctx, x, yTop, x, yMid, `${b.r}Ω`, colors);
+                        drawVoltageSourceSymbol(ctx, x, yMid, x, yBot, b.vPol === 1, `${b.v}V`, colors);
+                    } else if (b.kind === 'RI') {
+                        drawResistorSymbol(ctx, x, yTop, x, yMid, `${b.r}Ω`, colors);
+                        drawCurrentSourceSymbol(ctx, x, yMid, x, yBot, b.iDir === 1, `${b.i}A`, colors);
+                    }
+
+                    ctx.fillStyle = colors.wire;
+                    ctx.beginPath();
+                    ctx.arc(x, yTop, 4.2, 0, Math.PI * 2);
+                    ctx.arc(x, yBot, 4.2, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                // Sorotan Kotak Putus-Putus SUPERMESH
+                if (sol && sol.valid && sol.isSupermesh) {
+                    const firstLink = sol.supermeshLinks[0];
+                    const lastLink = sol.supermeshLinks[sol.supermeshLinks.length - 1];
+                    const sx1 = xs[firstLink - 1] + 10;
+                    const sx2 = xs[lastLink + 1] - 10;
+                    const sy1 = yTop - 16;
+                    const sy2 = yBot + 16;
+
+                    ctx.save();
+                    ctx.strokeStyle = colors.amber;
+                    ctx.lineWidth = 2.4;
+                    ctx.setLineDash([8, 6]);
+                    drawRoundedRect(ctx, sx1, sy1, sx2 - sx1, sy2 - sy1, 14);
+                    ctx.stroke();
+
+                    ctx.fillStyle = colors.amber;
+                    ctx.font = 'bold 11px Inter, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('⚡ LINTASAN SUPERMESH (KVL GABUNGAN)', (sx1 + sx2) / 2, sy1 - 10);
+                    ctx.restore();
+                }
+
+                // Partikel Aliran & Panah Loop Mesh
+                if (sol && sol.valid) {
+                    const bf = sol.branchFlows;
+                    drawParticlesOnSegment(ctx, xs[0], yBot, xs[0], yTop, bf.leftUp, colors);
+                    drawParticlesOnSegment(ctx, xs[0], yTop, xs[1], yTop, bf.top1, colors);
+                    drawParticlesOnSegment(ctx, xs[1], yTop, xs[1], yBot, bf.mid12Down, colors);
+                    drawParticlesOnSegment(ctx, xs[1], yBot, xs[0], yBot, bf.leftUp, colors);
+
+                    drawParticlesOnSegment(ctx, xs[1], yTop, xs[2], yTop, bf.top2, colors);
+                    if (N === 2) {
+                        drawParticlesOnSegment(ctx, xs[2], yTop, xs[2], yBot, bf.rightDown, colors);
+                        drawParticlesOnSegment(ctx, xs[2], yBot, xs[1], yBot, bf.rightDown, colors);
+                    } else {
+                        drawParticlesOnSegment(ctx, xs[2], yTop, xs[2], yBot, bf.mid23Down, colors);
+                        drawParticlesOnSegment(ctx, xs[2], yBot, xs[1], yBot, bf.top2, colors);
+                        drawParticlesOnSegment(ctx, xs[2], yTop, xs[3], yTop, bf.top3, colors);
+                        drawParticlesOnSegment(ctx, xs[3], yTop, xs[3], yBot, bf.rightDown, colors);
+                        drawParticlesOnSegment(ctx, xs[3], yBot, xs[2], yBot, bf.rightDown, colors);
+                    }
+
+                    for (let m = 0; m < N; m++) {
+                        const cx = (xs[m] + xs[m + 1]) / 2;
+                        const cy = (yTop + yBot) / 2;
+                        const rLoop = Math.min(meshW, yBot - yTop) * 0.24;
+                        const lbl = state.showCurrentValues
+                            ? `I${m + 1} = ${fmt(sol.currents[m], 2)}A`
+                            : `I${m + 1}`;
+                        drawLoopArrow(ctx, cx, cy, rLoop, state.loopDirs[m], lbl, colors.primary);
+                    }
+                }
+            }
+
+            function getBuilderMetrics(w, h) {
+                const b = state.builder;
+                const padX = 65;
+                const padY = 55;
+                const stepX = (w - padX * 2) / (b.cols - 1);
+                const stepY = (h - padY * 2) / (b.rows - 1);
+                return { padX, padY, stepX, stepY };
+            }
+
+            function drawBuilderCanvas(ctx, w, h, colors) {
+                const b = state.builder;
+                const m = getBuilderMetrics(w, h);
+                const sol = lastBuilderSol;
+
+                for (let c = 0; c < b.cols; c++) {
+                    for (let r = 0; r < b.rows; r++) {
+                        const gx = m.padX + c * m.stepX;
+                        const gy = m.padY + r * m.stepY;
+                        ctx.fillStyle = colors.gridDot;
+                        ctx.beginPath();
+                        ctx.arc(gx, gy, 4.5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                b.edges.forEach(e => {
+                    const x1 = m.padX + e.c1 * m.stepX;
+                    const y1 = m.padY + e.r1 * m.stepY;
+                    const x2 = m.padX + e.c2 * m.stepX;
+                    const y2 = m.padY + e.r2 * m.stepY;
+
+                    if (e.id === b.selectedEdgeId) {
+                        ctx.save();
+                        ctx.strokeStyle = colors.primary;
+                        ctx.lineWidth = 10;
+                        ctx.globalAlpha = 0.25;
+                        ctx.beginPath();
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+
+                    if (e.type === 'W') {
+                        ctx.strokeStyle = colors.wire;
+                        ctx.lineWidth = 2.6;
+                        ctx.beginPath();
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                        ctx.stroke();
+                    } else if (e.type === 'R') {
+                        drawResistorSymbol(ctx, x1, y1, x2, y2, `${e.value}Ω`, colors);
+                    } else if (e.type === 'V') {
+                        drawVoltageSourceSymbol(ctx, x1, y1, x2, y2, e.pol === 1, `${e.value}V`, colors);
+                    } else if (e.type === 'I') {
+                        drawCurrentSourceSymbol(ctx, x1, y1, x2, y2, e.pol === -1, `${e.value}A`, colors);
+                    }
+
+                    ctx.fillStyle = colors.wire;
+                    ctx.beginPath();
+                    ctx.arc(x1, y1, 4, 0, Math.PI * 2);
+                    ctx.arc(x2, y2, 4, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    if (sol && sol.valid) {
+                        const cur = sol.edgeCurrents[e.id] || 0;
+                        drawParticlesOnSegment(ctx, x1, y1, x2, y2, cur, colors);
+                    }
+                });
+
+                if (b.dragStart && b.dragCurrent) {
+                    const sx = m.padX + b.dragStart.c * m.stepX;
+                    const sy = m.padY + b.dragStart.r * m.stepY;
+                    ctx.save();
+                    ctx.strokeStyle = colors.primary;
+                    ctx.lineWidth = 2.5;
+                    ctx.setLineDash([6, 4]);
+                    ctx.beginPath();
+                    ctx.moveTo(sx, sy);
+                    ctx.lineTo(b.dragCurrent.x, b.dragCurrent.y);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                if (sol && sol.valid && sol.faces) {
+                    if (sol.isSupermesh) {
+                        sol.superEdges.forEach(se => {
+                            const fL = sol.faces[se.leftFace];
+                            const fR = sol.faces[se.rightFace];
+                            const sx1 = m.padX + fL.cLeft * m.stepX + 8;
+                            const sx2 = m.padX + fR.cRight * m.stepX - 8;
+                            const sy1 = m.padY + fL.rMin * m.stepY - 12;
+                            const sy2 = m.padY + fL.rMax * m.stepY + 12;
+                            ctx.save();
+                            ctx.strokeStyle = colors.amber;
+                            ctx.lineWidth = 2.2;
+                            ctx.setLineDash([7, 5]);
+                            drawRoundedRect(ctx, sx1, sy1, sx2 - sx1, sy2 - sy1, 12);
+                            ctx.stroke();
+                            ctx.fillStyle = colors.amber;
+                            ctx.font = 'bold 11px Inter, sans-serif';
+                            ctx.textAlign = 'center';
+                            ctx.fillText('⚡ SUPERMESH', (sx1 + sx2) / 2, sy1 - 8);
+                            ctx.restore();
+                        });
+                    }
+
+                    sol.faces.forEach((f, idx) => {
+                        const cx = m.padX + f.centerC * m.stepX;
+                        const cy = m.padY + f.centerR * m.stepY;
+                        const d = b.loopDirs[f.key] || 1;
+                        const rLoop = Math.min(m.stepX, m.stepY) * 0.26;
+                        const lbl = state.showCurrentValues
+                            ? `I${idx + 1}=${fmt(sol.meshCurrents[idx], 2)}A`
+                            : `I${idx + 1}`;
+                        drawLoopArrow(ctx, cx, cy, rLoop, d, lbl, colors.primary);
+                    });
+                }
+            }
+
+            // =========================================================================
+            // INTERAKSI MOUSE & SENTUH PADA MODE RAKIT SENDIRI
+            // =========================================================================
+            function setupBuilderCanvasEvents() {
+                const canvas = document.getElementById('circuitCanvas');
+                const getPos = (evt) => {
+                    const rect = canvas.getBoundingClientRect();
+                    const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+                    const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+                    return { x: clientX - rect.left, y: clientY - rect.top, w: rect.width, h: rect.height };
+                };
+
+                const nearestNode = (px, py, w, h) => {
+                    const m = getBuilderMetrics(w, h);
+                    const c = Math.round((px - m.padX) / m.stepX);
+                    const r = Math.round((py - m.padY) / m.stepY);
+                    if (c < 0 || c >= state.builder.cols || r < 0 || r >= state.builder.rows) return null;
+                    const nx = m.padX + c * m.stepX;
+                    const ny = m.padY + r * m.stepY;
+                    if (Math.hypot(px - nx, py - ny) <= 26) return { c, r };
+                    return null;
+                };
+
+                const nearestEdge = (px, py, w, h) => {
+                    const m = getBuilderMetrics(w, h);
+                    let best = null;
+                    let bestDist = 18;
+                    state.builder.edges.forEach(e => {
+                        const x1 = m.padX + e.c1 * m.stepX;
+                        const y1 = m.padY + e.r1 * m.stepY;
+                        const x2 = m.padX + e.c2 * m.stepX;
+                        const y2 = m.padY + e.r2 * m.stepY;
+                        const mx = (x1 + x2) / 2;
+                        const my = (y1 + y2) / 2;
+                        const d = Math.hypot(px - mx, py - my);
+                        if (d < bestDist) {
+                            bestDist = d;
+                            best = e;
+                        }
+                    });
+                    return best;
+                };
+
+                const onDown = (evt) => {
+                    if (state.mode !== 'builder') return;
+                    const pos = getPos(evt);
+                    const tool = state.builder.tool;
+
+                    if (tool === 'select' || tool === 'delete') {
+                        const hit = nearestEdge(pos.x, pos.y, pos.w, pos.h);
+                        if (!hit) {
+                            closeBuilderModal();
+                            return;
+                        }
+                        if (tool === 'delete') {
+                            state.builder.edges = state.builder.edges.filter(e => e.id !== hit.id);
+                            closeBuilderModal();
+                            updateSimulation();
+                        } else {
+                            openBuilderModal(hit);
+                        }
+                        return;
+                    }
+
+                    const node = nearestNode(pos.x, pos.y, pos.w, pos.h);
+                    if (node) {
+                        state.builder.dragStart = node;
+                        state.builder.dragCurrent = { x: pos.x, y: pos.y };
+                        renderCanvas();
+                    }
+                };
+
+                const onMove = (evt) => {
+                    if (state.mode !== 'builder' || !state.builder.dragStart) return;
+                    if (evt.cancelable) evt.preventDefault();
+                    const pos = getPos(evt);
+                    state.builder.dragCurrent = { x: pos.x, y: pos.y };
+                    renderCanvas();
+                };
+
+                const onUp = (evt) => {
+                    if (state.mode !== 'builder' || !state.builder.dragStart) return;
+                    const rect = canvas.getBoundingClientRect();
+                    const clientX = evt.changedTouches ? evt.changedTouches[0].clientX : evt.clientX;
+                    const clientY = evt.changedTouches ? evt.changedTouches[0].clientY : evt.clientY;
+                    const px = clientX - rect.left;
+                    const py = clientY - rect.top;
+
+                    const endNode = nearestNode(px, py, rect.width, rect.height);
+                    const startNode = state.builder.dragStart;
+                    state.builder.dragStart = null;
+                    state.builder.dragCurrent = null;
+
+                    if (endNode && (endNode.c !== startNode.c || endNode.r !== startNode.r)) {
+                        if (endNode.c === startNode.c || endNode.r === startNode.r) {
+                            state.builder.edges = state.builder.edges.filter(e =>
+                                !((e.c1 === startNode.c && e.r1 === startNode.r && e.c2 === endNode.c && e.r2 === endNode.r) ||
+                                  (e.c1 === endNode.c && e.r1 === endNode.r && e.c2 === startNode.c && e.r2 === startNode.r))
+                            );
+                            const t = state.builder.tool;
+                            const defVal = t === 'R' ? 5 : (t === 'V' ? 12 : (t === 'I' ? 2 : 0));
+                            state.builder.edges.push({
+                                id: 'e' + Date.now() + Math.random().toString(16).slice(2, 6),
+                                c1: startNode.c,
+                                r1: startNode.r,
+                                c2: endNode.c,
+                                r2: endNode.r,
+                                type: t,
+                                value: defVal,
+                                pol: 1
+                            });
+                            updateSimulation();
+                            return;
+                        }
+                    }
+                    renderCanvas();
+                };
+
+                canvas.addEventListener('mousedown', onDown);
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('mouseup', onUp);
+
+                canvas.addEventListener('touchstart', onDown, { passive: true });
+                canvas.addEventListener('touchmove', onMove, { passive: false });
+                canvas.addEventListener('touchend', onUp);
+            }
+
+            function openBuilderModal(edge) {
+                state.builder.selectedEdgeId = edge.id;
+                const modal = document.getElementById('builderEditorModal');
+                const title = document.getElementById('bldEditTitle');
+                const lbl = document.getElementById('bldEditValLabel');
+                const inp = document.getElementById('bldEditValue');
+                const polRow = document.getElementById('bldEditPolRow');
+
+                modal.classList.remove('hidden');
+                if (edge.type === 'R') {
+                    title.textContent = 'Edit Resistor (R)';
+                    lbl.textContent = 'Hambatan (Ω):';
+                    inp.disabled = false;
+                    inp.value = edge.value;
+                    polRow.classList.add('hidden');
+                } else if (edge.type === 'V') {
+                    title.textContent = 'Edit Sumber Tegangan';
+                    lbl.textContent = 'Tegangan (V):';
+                    inp.disabled = false;
+                    inp.value = edge.value;
+                    polRow.classList.remove('hidden');
+                } else if (edge.type === 'I') {
+                    title.textContent = 'Edit Sumber Arus';
+                    lbl.textContent = 'Arus Is (A):';
+                    inp.disabled = false;
+                    inp.value = edge.value;
+                    polRow.classList.remove('hidden');
+                } else {
+                    title.textContent = 'Kabel Penghubung';
+                    lbl.textContent = 'Hambatan:';
+                    inp.disabled = true;
+                    inp.value = 0;
+                    polRow.classList.add('hidden');
+                }
+                renderCanvas();
+            }
+
+            function closeBuilderModal() {
+                state.builder.selectedEdgeId = null;
+                document.getElementById('builderEditorModal').classList.add('hidden');
+                renderCanvas();
+            }
+
+            // =========================================================================
+            // SINKRONISASI SAKELAR & LOOP ANIMASI
+            // =========================================================================
+            function toggleCurrentValues() {
+                state.showCurrentValues = !state.showCurrentValues;
+                const btnTop = document.getElementById('btnToggleCurrents');
+                const btnCard = document.getElementById('btnToggleCurrentsCard');
+                if (btnTop) {
+                    btnTop.textContent = state.showCurrentValues ? '👁️ Nilai Arus: Tampil' : '🙈 Nilai Arus: Sembunyi';
+                    btnTop.className = state.showCurrentValues ? 'btn-primary' : '';
+                }
+                if (btnCard) {
+                    btnCard.textContent = state.showCurrentValues ? '👁️ Sembunyikan Arus' : '🙈 Tampilkan Arus';
+                    btnCard.className = state.showCurrentValues ? 'btn-primary' : '';
+                }
+                renderRightPanel();
+                renderCanvas();
+            }
+
+            function toggleCalculations() {
+                state.showCalculations = !state.showCalculations;
+                const btn = document.getElementById('btnToggleMath');
+                if (btn) {
+                    btn.textContent = state.showCalculations ? '📐 Perhitungan: Tampil' : '🙈 Perhitungan: Sembunyi';
+                    btn.className = state.showCalculations ? 'btn-primary' : '';
+                }
+                const mGroup = document.getElementById('methodToggleGroup');
+                if (mGroup) {
+                    mGroup.style.opacity = state.showCalculations ? '1' : '0.45';
+                    mGroup.style.pointerEvents = state.showCalculations ? 'auto' : 'none';
+                }
+                renderRightPanel();
+            }
+
+            function setMode(newMode) {
+                state.mode = newMode;
+                document.getElementById('btnModeTemplate').classList.toggle('active', newMode === 'template');
+                document.getElementById('btnModeBuilder').classList.toggle('active', newMode === 'builder');
+                document.getElementById('templateToolbar').classList.toggle('hidden', newMode !== 'template');
+                document.getElementById('builderToolbar').classList.toggle('hidden', newMode !== 'builder');
+                document.getElementById('templateConfigCard').classList.toggle('hidden', newMode !== 'template');
+                document.getElementById('builderHelpCard').classList.toggle('hidden', newMode !== 'builder');
+                closeBuilderModal();
+                updateSimulation();
+            }
+
+            function setMeshCount(count) {
+                state.meshCount = count;
+                document.getElementById('btn2Mesh').classList.toggle('active', count === 2);
+                document.getElementById('btn3Mesh').classList.toggle('active', count === 3);
+                renderTemplateControls();
+                updateSimulation();
+            }
+
+            function updateSimulation() {
+                try {
+                    if (state.mode === 'template') {
+                        lastTemplateSol = solveTemplateCircuit();
+                    } else {
+                        lastBuilderSol = solveBuilderCircuit();
+                    }
+                    renderRightPanel();
+                    renderCanvas();
+                } catch (err) {
+                    showError(err.message);
+                }
+            }
+
+            function startAnimationLoop() {
+                let lastTime = performance.now();
+                function step(now) {
+                    const dt = Math.min(0.05, (now - lastTime) / 1000);
+                    lastTime = now;
+                    if (state.particleSpeed > 0) {
+                        state.particlePhase = (state.particlePhase + dt * state.particleSpeed * 0.9) % 1000;
+                        renderCanvas();
+                    }
+                    animFrameId = requestAnimationFrame(step);
+                }
+                if (animFrameId) cancelAnimationFrame(animFrameId);
+                animFrameId = requestAnimationFrame(step);
+            }
+
+            // =========================================================================
+            // FITUR SIMPAN, MUAT, & EKSPOR FILE LENGKAP (.HTML, .DOC, .JSON, .PNG)
+            // =========================================================================
+            const STORAGE_KEY = 'simulasi_analisis_mesh_presets_v3';
+
+            function showStorageToast(msg, isError) {
+                const toast = document.getElementById('storageToast');
+                if (!toast) return;
+                toast.textContent = msg;
+                toast.style.background = isError ? 'var(--rose-soft)' : 'var(--emerald-soft)';
+                toast.style.color = isError ? 'var(--rose)' : 'var(--emerald)';
+                toast.style.borderBottomColor = isError ? 'var(--rose)' : 'var(--emerald)';
+                toast.classList.remove('hidden');
+                clearTimeout(toast._timer);
+                toast._timer = setTimeout(() => {
+                    toast.classList.add('hidden');
+                }, 4000);
+            }
+
+            function captureCircuitSnapshot(customName) {
+                return {
+                    version: 3,
+                    name: customName || 'Rangkaian Analisis Mesh',
+                    savedAt: new Date().toISOString(),
+                    mode: state.mode,
+                    theme: state.theme,
+                    meshCount: state.meshCount,
+                    calcMethod: state.calcMethod,
+                    showCurrentValues: state.showCurrentValues,
+                    showCalculations: state.showCalculations,
+                    particleSpeed: state.particleSpeed,
+                    flowMode: state.flowMode,
+                    loopDirs: state.loopDirs.slice(),
+                    topR: state.topR.slice(),
+                    branches: JSON.parse(JSON.stringify(state.branches)),
+                    builder: {
+                        cols: state.builder.cols,
+                        rows: state.builder.rows,
+                        edges: JSON.parse(JSON.stringify(state.builder.edges)),
+                        loopDirs: JSON.parse(JSON.stringify(state.builder.loopDirs))
+                    }
+                };
+            }
+
+            function applyCircuitSnapshot(snap) {
+                if (!snap || typeof snap !== 'object') {
+                    throw new Error('Format data rangkaian tidak valid.');
+                }
+
+                if (snap.theme) {
+                    state.theme = snap.theme;
+                    if (snap.theme === 'classic') {
+                        document.documentElement.removeAttribute('data-theme');
+                    } else {
+                        document.documentElement.setAttribute('data-theme', snap.theme);
+                    }
+                    document.querySelectorAll('#themeBar .theme-btn').forEach(b => {
+                        b.classList.toggle('active', b.getAttribute('data-theme') === snap.theme);
+                    });
+                }
+
+                if (Array.isArray(snap.loopDirs) && snap.loopDirs.length >= 3) {
+                    state.loopDirs = snap.loopDirs.slice(0, 3);
+                }
+                if (Array.isArray(snap.topR) && snap.topR.length >= 3) {
+                    state.topR = snap.topR.slice(0, 3);
+                }
+                if (Array.isArray(snap.branches) && snap.branches.length >= 4) {
+                    state.branches = JSON.parse(JSON.stringify(snap.branches));
+                }
+
+                if (snap.builder && Array.isArray(snap.builder.edges)) {
+                    state.builder.edges = JSON.parse(JSON.stringify(snap.builder.edges));
+                    state.builder.loopDirs = snap.builder.loopDirs ? JSON.parse(JSON.stringify(snap.builder.loopDirs)) : {};
+                    state.builder.selectedEdgeId = null;
+                }
+
+                if (typeof snap.meshCount === 'number' && (snap.meshCount === 2 || snap.meshCount === 3)) {
+                    state.meshCount = snap.meshCount;
+                    document.getElementById('btn2Mesh').classList.toggle('active', snap.meshCount === 2);
+                    document.getElementById('btn3Mesh').classList.toggle('active', snap.meshCount === 3);
+                }
+
+                if (snap.calcMethod === 'cramer' || snap.calcMethod === 'substitution') {
+                    state.calcMethod = snap.calcMethod;
+                    document.getElementById('btnMethodCramer').classList.toggle('active', snap.calcMethod === 'cramer');
+                    document.getElementById('btnMethodSubst').classList.toggle('active', snap.calcMethod === 'substitution');
+                }
+
+                if (typeof snap.showCurrentValues === 'boolean') {
+                    state.showCurrentValues = snap.showCurrentValues;
+                    const btnTop = document.getElementById('btnToggleCurrents');
+                    const btnCard = document.getElementById('btnToggleCurrentsCard');
+                    btnTop.textContent = state.showCurrentValues ? '👁️ Nilai Arus: Tampil' : '🙈 Nilai Arus: Sembunyi';
+                    btnTop.className = state.showCurrentValues ? 'btn-primary' : '';
+                    btnCard.textContent = state.showCurrentValues ? '👁️ Sembunyikan Arus' : '🙈 Tampilkan Arus';
+                    btnCard.className = state.showCurrentValues ? 'btn-primary' : '';
+                }
+
+                if (typeof snap.showCalculations === 'boolean') {
+                    state.showCalculations = snap.showCalculations;
+                    const btnMath = document.getElementById('btnToggleMath');
+                    btnMath.textContent = state.showCalculations ? '📐 Perhitungan: Tampil' : '🙈 Perhitungan: Sembunyi';
+                    btnMath.className = state.showCalculations ? 'btn-primary' : '';
+                    const mGroup = document.getElementById('methodToggleGroup');
+                    mGroup.style.opacity = state.showCalculations ? '1' : '0.45';
+                    mGroup.style.pointerEvents = state.showCalculations ? 'auto' : 'none';
+                }
+
+                if (typeof snap.particleSpeed === 'number') {
+                    state.particleSpeed = Math.max(0, Math.min(3, snap.particleSpeed));
+                    const slider = document.getElementById('speedSlider');
+                    const lbl = document.getElementById('speedValLabel');
+                    slider.value = state.particleSpeed;
+                    lbl.textContent = state.particleSpeed === 0 ? '0.0x (Diam)' : state.particleSpeed.toFixed(1) + 'x';
+                }
+
+                if (snap.flowMode === 'conventional' || snap.flowMode === 'electron') {
+                    state.flowMode = snap.flowMode;
+                    document.getElementById('btnFlowConv').classList.toggle('active', snap.flowMode === 'conventional');
+                    document.getElementById('btnFlowElec').classList.toggle('active', snap.flowMode === 'electron');
+                }
+
+                renderTemplateControls();
+                setMode(snap.mode === 'builder' ? 'builder' : 'template');
+            }
+
+            function getSavedBrowserPresets() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    const list = raw ? JSON.parse(raw) : [];
+                    return Array.isArray(list) ? list : [];
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            function refreshSavedPresetsDropdown(selectedId) {
+                const sel = document.getElementById('savedPresetsSelect');
+                if (!sel) return;
+                const list = getSavedBrowserPresets();
+                sel.innerHTML = `<option value="">-- Tersimpan (${list.length}) --</option>` +
+                    list.map(item => {
+                        const modeBadge = item.mode === 'builder' ? 'Rakit' : `${item.meshCount}M`;
+                        return `<option value="${item.id}" ${item.id === selectedId ? 'selected' : ''}>${item.name} [${modeBadge}]</option>`;
+                    }).join('');
+            }
+
+            // Membentuk HTML bersih bebas duplikasi elemen DOM dinamis untuk diekspor
+            function buildCleanStandaloneHTML(snapshot) {
+                const cloneDoc = document.documentElement.cloneNode(true);
+
+                // Reset atribut tema agar dikontrol oleh INITIAL_STATE saat dibuka ulang
+                cloneDoc.removeAttribute('data-theme');
+
+                // Bersihkan kontainer yang dirender secara dinamis oleh JS agar tidak ganda
+                const dynamicIds = [
+                    'loopDirControls',
+                    'branchControlsGrid',
+                    'topResistorControls',
+                    'builderLoopControls',
+                    'resultCardsContainer',
+                    'mathStepsContainer',
+                    'tableContainer'
+                ];
+                dynamicIds.forEach(id => {
+                    const el = cloneDoc.querySelector('#' + id);
+                    if (el) el.innerHTML = '';
+                });
+
+                const statusEl = cloneDoc.querySelector('#statusBanner');
+                if (statusEl) {
+                    statusEl.className = 'status-banner';
+                    statusEl.textContent = 'Memuat analisis rangkaian...';
+                }
+
+                const toastEl = cloneDoc.querySelector('#storageToast');
+                if (toastEl) toastEl.classList.add('hidden');
+
+                const modalEl = cloneDoc.querySelector('#builderEditorModal');
+                if (modalEl) modalEl.classList.add('hidden');
+
+                const errEl = cloneDoc.querySelector('#errorBox');
+                if (errEl) {
+                    errEl.style.display = 'none';
+                    errEl.textContent = '';
+                }
+
+                // Pastikan elemen canvas bersih dengan dimensi eksplisit 720x400
+                const canvasEl = cloneDoc.querySelector('#circuitCanvas');
+                if (canvasEl) {
+                    canvasEl.setAttribute('width', '720');
+                    canvasEl.setAttribute('height', '400');
+                }
+
+                // Hapus skrip state lama jika ada, lalu sisipkan window.INITIAL_STATE sebelum #app-source
+                const oldStateScript = cloneDoc.querySelector('#embeddedStateScript');
+                if (oldStateScript && oldStateScript.parentNode) {
+                    oldStateScript.parentNode.removeChild(oldStateScript);
+                }
+
+                const safeJson = JSON.stringify(snapshot).replace(/<\/script>/gi, '<\\/script>');
+                const stateScript = document.createElement('script');
+                stateScript.id = 'embeddedStateScript';
+                stateScript.textContent = `window.INITIAL_STATE = ${safeJson};`;
+
+                const appScript = cloneDoc.querySelector('#app-source');
+                if (appScript && appScript.parentNode) {
+                    appScript.parentNode.insertBefore(stateScript, appScript);
+                } else {
+                    const bodyEl = cloneDoc.querySelector('body');
+                    if (bodyEl) bodyEl.appendChild(stateScript);
+                }
+
+                return '<!DOCTYPE html>\n' + cloneDoc.outerHTML;
+            }
+
+            function setupStorageFeatures() {
+                refreshSavedPresetsDropdown();
+
+                // 1. Simpan Cepat ke Browser (LocalStorage)
+                document.getElementById('btnSaveBrowser').addEventListener('click', () => {
+                    try {
+                        const inp = document.getElementById('savePresetName');
+                        const rawName = (inp.value || '').trim();
+                        const defaultName = state.mode === 'builder'
+                            ? `Rangkaian_Rakit_${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`
+                            : `Template_${state.meshCount}Mesh_${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+                        const name = rawName || defaultName;
+
+                        const list = getSavedBrowserPresets();
+                        const newId = 'preset_' + Date.now();
+                        const snapshot = captureCircuitSnapshot(name);
+                        snapshot.id = newId;
+
+                        const existingIdx = list.findIndex(x => x.name.toLowerCase() === name.toLowerCase());
+                        if (existingIdx >= 0) {
+                            snapshot.id = list[existingIdx].id;
+                            list[existingIdx] = snapshot;
+                        } else {
+                            list.unshift(snapshot);
+                        }
+
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+                        refreshSavedPresetsDropdown(snapshot.id);
+                        showStorageToast(`✓ Rangkaian "${name}" berhasil disimpan di browser!`, false);
+                    } catch (err) {
+                        showStorageToast('Gagal menyimpan ke browser: ' + err.message, true);
+                    }
+                });
+
+                // 2. Muat dari Browser
+                document.getElementById('btnLoadBrowser').addEventListener('click', () => {
+                    const sel = document.getElementById('savedPresetsSelect');
+                    const id = sel.value;
+                    if (!id) {
+                        showStorageToast('Pilih salah satu rangkaian tersimpan pada daftar terlebih dahulu.', true);
+                        return;
+                    }
+                    const list = getSavedBrowserPresets();
+                    const found = list.find(x => x.id === id);
+                    if (!found) {
+                        showStorageToast('Data rangkaian tidak ditemukan.', true);
+                        return;
+                    }
+                    try {
+                        applyCircuitSnapshot(found);
+                        document.getElementById('savePresetName').value = found.name || '';
+                        showStorageToast(`✓ Rangkaian "${found.name}" berhasil dimuat!`, false);
+                    } catch (err) {
+                        showStorageToast('Gagal memuat rangkaian: ' + err.message, true);
+                    }
+                });
+
+                // 3. Hapus dari Browser
+                document.getElementById('btnDeleteBrowser').addEventListener('click', () => {
+                    const sel = document.getElementById('savedPresetsSelect');
+                    const id = sel.value;
+                    if (!id) {
+                        showStorageToast('Pilih rangkaian yang ingin dihapus terlebih dahulu.', true);
+                        return;
+                    }
+                    const list = getSavedBrowserPresets();
+                    const target = list.find(x => x.id === id);
+                    const filtered = list.filter(x => x.id !== id);
+                    try {
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+                        refreshSavedPresetsDropdown();
+                        showStorageToast(`🗑️ Rangkaian "${target ? target.name : ''}" dihapus dari browser.`, false);
+                    } catch (err) {
+                        showStorageToast('Gagal menghapus data: ' + err.message, true);
+                    }
+                });
+
+                // 4. Simpan File Simulasi Mandiri (.html)
+                document.getElementById('btnExportHTML').addEventListener('click', () => {
+                    try {
+                        const rawName = (document.getElementById('savePresetName').value || '').trim();
+                        const baseName = rawName || (state.mode === 'builder' ? 'simulasi_rakit_mesh' : `simulasi_analisis_${state.meshCount}_mesh`);
+                        const fileName = baseName.toLowerCase().replace(/[^a-z0-9_-]+/g, '_') + '.html';
+
+                        const snapshot = captureCircuitSnapshot(baseName);
+                        const cleanHtml = buildCleanStandaloneHTML(snapshot);
+
+                        const blob = new Blob([cleanHtml], { type: 'text/html;charset=utf-8' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = fileName;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+
+                        showStorageToast(`💾 File simulasi mandiri "${fileName}" berhasil diunduh!`, false);
+                    } catch (err) {
+                        showStorageToast('Gagal menyimpan file simulasi (.html): ' + err.message, true);
+                    }
+                });
+
+                // 5. Simpan Laporan Analisis Lengkap untuk Microsoft Word (.doc)
+                document.getElementById('btnExportDOC').addEventListener('click', () => {
+                    try {
+                        renderCanvas();
+                        const canvas = document.getElementById('circuitCanvas');
+                        const diagramDataUrl = canvas.toDataURL('image/png');
+
+                        const rawName = (document.getElementById('savePresetName').value || '').trim();
+                        const titleText = rawName || (state.mode === 'builder'
+                            ? 'Laporan Analisis Rangkaian Mesh (Mode Rakit)'
+                            : `Laporan Analisis ${state.meshCount} Mesh & Supermesh`);
+                        const fileName = titleText.toLowerCase().replace(/[^a-z0-9_-]+/g, '_') + '.doc';
+
+                        const statusHtml = document.getElementById('statusBanner').innerHTML;
+                        const resultsHtml = document.getElementById('resultCardsContainer').innerHTML;
+                        const mathHtml = state.showCalculations
+                            ? document.getElementById('mathStepsContainer').innerHTML
+                            : '<p><em>(Langkah perhitungan sedang disembunyikan pada saat laporan diekspor)</em></p>';
+                        const tableHtml = document.getElementById('tableContainer').innerHTML;
+
+                        const wordDocHtml = `
+                            <html xmlns:o="urn:schemas-microsoft-com:office:office"
+                                  xmlns:w="urn:schemas-microsoft-com:office:word"
+                                  xmlns="http://www.w3.org/TR/REC-html40">
+                            <head>
+                                <meta charset="utf-8">
+                                <title>${titleText}</title>
+                                <style>
+                                    body { font-family: Calibri, Arial, sans-serif; color: #0f172a; line-height: 1.5; }
+                                    h1 { color: #1e3a8a; border-bottom: 2px solid #2563eb; padding-bottom: 6px; font-size: 18pt; }
+                                    h2 { color: #1e40af; margin-top: 16px; font-size: 13pt; }
+                                    .meta { color: #475569; font-size: 10pt; margin-bottom: 12px; }
+                                    .box { border: 1px solid #cbd5e1; background: #f8fafc; padding: 10px; margin-bottom: 12px; }
+                                    .eq-box { border-left: 3px solid #2563eb; background: #ffffff; padding: 6px 10px; margin: 6px 0; font-family: Consolas, monospace; font-size: 10.5pt; }
+                                    .res-pill { display: inline-block; border: 1px solid #94a3b8; padding: 8px 14px; margin: 4px 6px 4px 0; background: #eff6ff; }
+                                    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10.5pt; }
+                                    th, td { border: 1px solid #94a3b8; padding: 6px 8px; text-align: left; }
+                                    th { background: #e2e8f0; font-weight: bold; }
+                                    .diagram-wrap { text-align: center; margin: 14px 0; }
+                                    .diagram-wrap img { max-width: 100%; height: auto; border: 1px solid #cbd5e1; }
+                                </style>
+                            </head>
+                            <body>
+                                <h1>${titleText}</h1>
+                                <div class="meta">
+                                    Tanggal Ekspor: ${new Date().toLocaleString('id-ID')} |
+                                    Mode: ${state.mode === 'builder' ? 'Rakit Sendiri (Grid)' : 'Template ' + state.meshCount + ' Mesh'} |
+                                    Metode: ${state.calcMethod === 'cramer' ? 'Aturan Cramer' : 'Metode Substitusi'}
+                                </div>
+
+                                <h2>1. Diagram Rangkaian</h2>
+                                <div class="diagram-wrap">
+                                    <img src="${diagramDataUrl}" alt="Diagram Rangkaian Mesh">
+                                </div>
+
+                                <h2>2. Status &amp; Ringkasan Arus Mesh</h2>
+                                <div class="box">${statusHtml}</div>
+                                <div>${resultsHtml}</div>
+
+                                <h2>3. Penurunan Persamaan &amp; Langkah Perhitungan</h2>
+                                <div>${mathHtml}</div>
+
+                                <h2>4. Tabel Arus, Tegangan, &amp; Daya Komponen</h2>
+                                <div>${tableHtml}</div>
+                            </body>
+                            </html>
+                        `;
+
+                        const blob = new Blob(['\ufeff', wordDocHtml], { type: 'application/msword;charset=utf-8' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = fileName;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+
+                        showStorageToast(`📄 Laporan Word "${fileName}" berhasil diunduh!`, false);
+                    } catch (err) {
+                        showStorageToast('Gagal membuat laporan Word (.doc): ' + err.message, true);
+                    }
+                });
+
+                // 6. Ekspor File Proyek JSON
+                document.getElementById('btnExportJSON').addEventListener('click', () => {
+                    try {
+                        const rawName = (document.getElementById('savePresetName').value || '').trim();
+                        const name = rawName || (state.mode === 'builder' ? 'proyek_rakit_mesh' : `proyek_analisis_${state.meshCount}_mesh`);
+                        const snapshot = captureCircuitSnapshot(name);
+                        const jsonStr = JSON.stringify(snapshot, null, 2);
+                        const blob = new Blob([jsonStr], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+
+                        const safeFile = name.toLowerCase().replace(/[^a-z0-9_-]+/g, '_') + '.json';
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = safeFile;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+
+                        showStorageToast(`📦 File proyek "${safeFile}" berhasil diunduh!`, false);
+                    } catch (err) {
+                        showStorageToast('Gagal mengekspor JSON: ' + err.message, true);
+                    }
+                });
+
+                // 7. Impor File Proyek JSON
+                const fileInput = document.getElementById('importJsonInput');
+                document.getElementById('btnImportJSON').addEventListener('click', () => {
+                    fileInput.value = '';
+                    fileInput.click();
+                });
+
+                fileInput.addEventListener('change', (evt) => {
+                    const file = evt.target.files && evt.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const parsed = JSON.parse(e.target.result);
+                            applyCircuitSnapshot(parsed);
+                            if (parsed.name) document.getElementById('savePresetName').value = parsed.name;
+                            showStorageToast(`📂 File proyek "${file.name}" berhasil dimuat!`, false);
+                        } catch (err) {
+                            showStorageToast('File JSON tidak valid atau rusak: ' + err.message, true);
+                        }
+                    };
+                    reader.readAsText(file);
+                });
+
+                // 8. Ekspor Gambar Diagram PNG
+                document.getElementById('btnExportPNG').addEventListener('click', () => {
+                    try {
+                        renderCanvas();
+                        const canvas = document.getElementById('circuitCanvas');
+                        const rawName = (document.getElementById('savePresetName').value || '').trim();
+                        const baseName = rawName || (state.mode === 'builder' ? 'diagram_rakit_mesh' : `diagram_analisis_${state.meshCount}_mesh`);
+                        const fileName = baseName.toLowerCase().replace(/[^a-z0-9_-]+/g, '_') + '.png';
+
+                        const dataUrl = canvas.toDataURL('image/png');
+                        const a = document.createElement('a');
+                        a.href = dataUrl;
+                        a.download = fileName;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+
+                        showStorageToast(`🖼️ Gambar diagram "${fileName}" berhasil diunduh!`, false);
+                    } catch (err) {
+                        showStorageToast('Gagal mengunduh gambar PNG: ' + err.message, true);
+                    }
+                });
+
+                // Muat otomatis jika file ini adalah hasil ekspor simulasi mandiri (.html)
+                if (window.INITIAL_STATE) {
+                    try {
+                        applyCircuitSnapshot(window.INITIAL_STATE);
+                        if (window.INITIAL_STATE.name) {
+                            document.getElementById('savePresetName').value = window.INITIAL_STATE.name;
+                        }
+                        showStorageToast(`✓ Proyek tertanam "${window.INITIAL_STATE.name || 'Tersimpan'}" dimuat otomatis.`, false);
+                    } catch (err) {
+                        console.warn('Gagal memuat INITIAL_STATE:', err);
+                    }
+                }
+            }
+
+            function init() {
+                try {
+                    // 1. Tema Warna
+                    document.querySelectorAll('#themeBar .theme-btn').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const t = btn.getAttribute('data-theme');
+                            state.theme = t;
+                            if (t === 'classic') {
+                                document.documentElement.removeAttribute('data-theme');
+                            } else {
+                                document.documentElement.setAttribute('data-theme', t);
+                            }
+                            document.querySelectorAll('#themeBar .theme-btn').forEach(b => b.classList.remove('active'));
+                            btn.classList.add('active');
+                            renderCanvas();
+                        });
+                    });
+
+                    // 2. Pemilih Mode Utama & Sakelar Tampil/Sembunyi
+                    document.getElementById('btnModeTemplate').addEventListener('click', () => setMode('template'));
+                    document.getElementById('btnModeBuilder').addEventListener('click', () => setMode('builder'));
+                    document.getElementById('btnToggleCurrents').addEventListener('click', toggleCurrentValues);
+                    document.getElementById('btnToggleCurrentsCard').addEventListener('click', toggleCurrentValues);
+                    document.getElementById('btnToggleMath').addEventListener('click', toggleCalculations);
+
+                    // 3. Kontrol Jumlah Mesh & 4 Skenario Cepat
+                    document.getElementById('btn2Mesh').addEventListener('click', () => setMeshCount(2));
+                    document.getElementById('btn3Mesh').addEventListener('click', () => setMeshCount(3));
+
+                    document.getElementById('preMeshBiasa').addEventListener('click', () => {
+                        state.meshCount = 2;
+                        state.loopDirs = [1, 1, 1];
+                        state.topR = [6, 8, 5];
+                        state.branches[0] = { id: 'b0', label: 'Cabang Kiri', kind: 'V', r: 2, v: 24, vPol: 1, i: 2.0, iDir: 1 };
+                        state.branches[1] = { id: 'b1', label: 'Cabang Tengah 1', kind: 'R', r: 4, v: 6, vPol: 1, i: 1.5, iDir: 1 };
+                        state.branches[3] = { id: 'b3', label: 'Cabang Kanan', kind: 'V', r: 3, v: 12, vPol: 1, i: 1.5, iDir: 1 };
+                        setMeshCount(2);
+                    });
+
+                    document.getElementById('preSupermesh').addEventListener('click', () => {
+                        state.meshCount = 2;
+                        state.loopDirs = [1, 1, 1];
+                        state.topR = [6, 8, 5];
+                        state.branches[0] = { id: 'b0', label: 'Cabang Kiri', kind: 'V', r: 2, v: 24, vPol: 1, i: 2.0, iDir: 1 };
+                        state.branches[1] = { id: 'b1', label: 'Cabang Tengah 1', kind: 'I', r: 4, v: 6, vPol: 1, i: 2.0, iDir: 1 };
+                        state.branches[3] = { id: 'b3', label: 'Cabang Kanan', kind: 'V', r: 3, v: 12, vPol: 1, i: 1.5, iDir: 1 };
+                        setMeshCount(2);
+                    });
+
+                    document.getElementById('preOuterIs').addEventListener('click', () => {
+                        state.meshCount = 2;
+                        state.loopDirs = [1, 1, 1];
+                        state.topR = [6, 8, 5];
+                        state.branches[0] = { id: 'b0', label: 'Cabang Kiri', kind: 'I', r: 2, v: 24, vPol: 1, i: 2.5, iDir: 1 };
+                        state.branches[1] = { id: 'b1', label: 'Cabang Tengah 1', kind: 'R', r: 4, v: 6, vPol: 1, i: 1.5, iDir: 1 };
+                        state.branches[3] = { id: 'b3', label: 'Cabang Kanan', kind: 'V', r: 3, v: 12, vPol: 1, i: 1.5, iDir: 1 };
+                        setMeshCount(2);
+                    });
+
+                    document.getElementById('pre3MeshMode').addEventListener('click', () => {
+                        state.meshCount = 3;
+                        state.loopDirs = [1, 1, 1];
+                        state.topR = [5, 6, 4];
+                        state.branches[0] = { id: 'b0', label: 'Cabang Kiri', kind: 'V', r: 2, v: 30, vPol: 1, i: 3.0, iDir: 1 };
+                        state.branches[1] = { id: 'b1', label: 'Cabang Tengah 1', kind: 'I', r: 4, v: 6, vPol: 1, i: 1.5, iDir: 1 };
+                        state.branches[2] = { id: 'b2', label: 'Cabang Tengah 2', kind: 'R', r: 5, v: 6, vPol: 1, i: 1.0, iDir: 1 };
+                        state.branches[3] = { id: 'b3', label: 'Cabang Kanan', kind: 'V', r: 3, v: 12, vPol: 1, i: 2.0, iDir: 1 };
+                        setMeshCount(3);
+                    });
+
+                    // 4. Palet Alat Mode Rakit Sendiri
+                    document.querySelectorAll('#builderToolbar .tool-btn').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            state.builder.tool = btn.getAttribute('data-tool');
+                            document.querySelectorAll('#builderToolbar .tool-btn').forEach(b => {
+                                if (b.getAttribute('data-tool') !== 'delete') b.classList.remove('btn-primary');
+                            });
+                            if (state.builder.tool !== 'delete') btn.classList.add('btn-primary');
+                            closeBuilderModal();
+                        });
+                    });
+
+                    document.getElementById('btnBldEx2').addEventListener('click', () => {
+                        loadBuilderPreset('2mesh');
+                        updateSimulation();
+                    });
+                    document.getElementById('btnBldExSuper').addEventListener('click', () => {
+                        loadBuilderPreset('supermesh');
+                        updateSimulation();
+                    });
+                    document.getElementById('btnBldClear').addEventListener('click', () => {
+                        state.builder.edges = [];
+                        closeBuilderModal();
+                        updateSimulation();
+                    });
+
+                    // Modal Edit Komponen Builder
+                    document.getElementById('btnBldCloseModal').addEventListener('click', closeBuilderModal);
+                    document.getElementById('btnBldFlipPol').addEventListener('click', () => {
+                        const edge = state.builder.edges.find(e => e.id === state.builder.selectedEdgeId);
+                        if (edge) {
+                            edge.pol *= -1;
+                            updateSimulation();
+                        }
+                    });
+                    document.getElementById('btnBldDeleteEdge').addEventListener('click', () => {
+                        state.builder.edges = state.builder.edges.filter(e => e.id !== state.builder.selectedEdgeId);
+                        closeBuilderModal();
+                        updateSimulation();
+                    });
+                    document.getElementById('btnBldSaveEdge').addEventListener('click', () => {
+                        const edge = state.builder.edges.find(e => e.id === state.builder.selectedEdgeId);
+                        if (edge && edge.type !== 'W') {
+                            edge.value = Math.max(0.1, parseFloat(document.getElementById('bldEditValue').value) || 0.1);
+                        }
+                        closeBuilderModal();
+                        updateSimulation();
+                    });
+
+                    // 5. Kontrol Kecepatan Partikel (mulai dari 0.0) & Arah Aliran
+                    const speedSlider = document.getElementById('speedSlider');
+                    const speedLabel = document.getElementById('speedValLabel');
+                    speedSlider.addEventListener('input', () => {
+                        state.particleSpeed = parseFloat(speedSlider.value) || 0;
+                        speedLabel.textContent = state.particleSpeed === 0
+                            ? '0.0x (Diam)'
+                            : state.particleSpeed.toFixed(1) + 'x';
+                        renderCanvas();
+                    });
+
+                    document.getElementById('btnFlowConv').addEventListener('click', () => {
+                        state.flowMode = 'conventional';
+                        document.getElementById('btnFlowConv').classList.add('active');
+                        document.getElementById('btnFlowElec').classList.remove('active');
+                        renderCanvas();
+                    });
+                    document.getElementById('btnFlowElec').addEventListener('click', () => {
+                        state.flowMode = 'electron';
+                        document.getElementById('btnFlowElec').classList.add('active');
+                        document.getElementById('btnFlowConv').classList.remove('active');
+                        renderCanvas();
+                    });
+
+                    // 6. Tab Metode Perhitungan (Cramer vs Substitusi)
+                    document.getElementById('btnMethodCramer').addEventListener('click', () => {
+                        state.calcMethod = 'cramer';
+                        document.getElementById('btnMethodCramer').classList.add('active');
+                        document.getElementById('btnMethodSubst').classList.remove('active');
+                        renderRightPanel();
+                    });
+                    document.getElementById('btnMethodSubst').addEventListener('click', () => {
+                        state.calcMethod = 'substitution';
+                        document.getElementById('btnMethodSubst').classList.add('active');
+                        document.getElementById('btnMethodCramer').classList.remove('active');
+                        renderRightPanel();
+                    });
+
+                    loadBuilderPreset('2mesh');
+                    setupBuilderCanvasEvents();
+
+                    window.addEventListener('resize', renderCanvas);
+                    if (typeof ResizeObserver !== 'undefined') {
+                        const ro = new ResizeObserver(() => renderCanvas());
+                        ro.observe(document.getElementById('canvasWrapper'));
+                    }
+
+                    setupStorageFeatures();
+                    renderTemplateControls();
+                    updateSimulation();
+                    startAnimationLoop();
+
+                    // Pastikan kanvas digambar ulang setelah layout browser selesai dihitung sepenuhnya
+                    requestAnimationFrame(() => {
+                        renderCanvas();
+                        requestAnimationFrame(renderCanvas);
+                    });
+                } catch (err) {
+                    showError(err.message);
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        })();
+    </script>
+</body>
+</html>
